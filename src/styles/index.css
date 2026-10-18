@@ -1,0 +1,117 @@
+@import "tailwindcss";
+
+/*
+  Tokens del sistema de diseño Felicitas (src/design/tokens.json).
+  Si cambia el sistema, actualizar acá. Uso: bg-lavanda, text-ink, font-display, rounded-card, shadow-soft…
+*/
+@theme {
+  /* Marca (manual de marca, p.4) */
+  --color-lavanda: #c6b6da;
+  --color-menta: #90cec9;
+  --color-amarillo: #fff3b1;
+
+  /* Propuestos en el sistema de diseño */
+  --color-lavanda-deep: #a994c4;
+  --color-menta-deep: #2f7f7a;
+  --color-on-brand: #2f2a3d;
+  --color-ink: #2f2a3d;
+  --color-ink-muted: #5a5170;
+  --color-page: #fffdf7;
+  --color-card: #ffffff;
+  --color-borde: #e3dbef;
+  --color-lila-suave: #f3eef8;
+  --color-focus: #2f2a3d;
+  --color-danger: #b42318;
+
+  /* Tipografía: marca primero, respaldo después */
+  --font-display: Nekta, Fredoka, "Trebuchet MS", sans-serif;
+  --font-body: Pogonia, Montserrat, system-ui, sans-serif;
+  --font-accent: Talina, Fredoka, "Trebuchet MS", sans-serif;
+
+  /* Radios */
+  --radius-campo: 8px;
+  --radius-bloque: 16px;
+  --radius-card: 28px;
+
+  /* Sombra */
+  --shadow-soft: 0 8px 24px rgb(47 42 61 / 0.12);
+}
+
+/*
+  Cuando estén los archivos de fuente, ponerlos en public/fonts y descomentar:
+@font-face { font-family: "Nekta"; src: url("/fonts/Nekta-Regular.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "Talina"; src: url("/fonts/Talina-Regular.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "Pogonia"; src: url("/fonts/Pogonia-Regular.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+*/
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-page text-ink font-body antialiased;
+    line-height: 1.5;
+  }
+  h1, h2, h3 {
+    @apply font-display;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 3px;
+  }
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-[1200px] px-4 sm:px-8 lg:px-12;
+  }
+  .eyebrow {
+    @apply font-accent text-[13px] uppercase leading-4 tracking-[0.16em];
+  }
+  /* Texto largo de las páginas legales */
+  .legal h2 {
+    @apply pt-4 text-[26px] leading-tight;
+  }
+  .legal p,
+  .legal li {
+    @apply leading-relaxed;
+  }
+  .legal ul {
+    @apply flex list-disc flex-col gap-2 pl-6;
+  }
+  .legal a {
+    @apply font-semibold text-menta-deep underline;
+  }
+}
+
+/* Imprimir solo el certificado (o el contenido), sin encabezado, pie ni botones. */
+@media print {
+  header,
+  footer,
+  .no-imprimir,
+  a[href="#contenido"] {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+  * {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .certificado {
+    break-inside: avoid;
+    border-color: var(--color-borde);
+  }
+  @page {
+    margin: 12mm;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
