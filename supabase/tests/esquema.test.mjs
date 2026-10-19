@@ -15,7 +15,13 @@ const db = new PGlite();
 await db.exec(`
   create role anon nologin; create role authenticated nologin; create role service_role nologin bypassrls;
   create schema auth;
-  create table auth.users (id uuid primary key, raw_user_meta_data jsonb default '{}');
+  create table auth.users (id uuid primary key, raw_user_meta_data jsonb default '{}', email text, created_at timestamptz default now());
+  create schema storage;
+  create table storage.buckets (id text primary key, name text, public boolean, file_size_limit bigint, allowed_mime_types text[]);
+  create table storage.objects (id uuid primary key default gen_random_uuid(), bucket_id text, name text);
+  alter table storage.objects enable row level security;
+  grant usage on schema storage to anon, authenticated, service_role;
+  grant all on storage.objects, storage.buckets to anon, authenticated, service_role;
   create function auth.uid() returns uuid language sql stable as
     $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
   grant usage on schema auth to anon, authenticated, service_role;
@@ -65,7 +71,7 @@ await espera('perfil creado al registrarse, con nombre', () => db.query(`select 
 await espera('anon ve los 6 cursos', () => como('anon', null, 'select * from cursos'), (r) => r?.rows.length === 6);
 await espera('anon ve las 16 clases', () => como('anon', null, 'select * from clases'), (r) => r?.rows.length === 16);
 await espera('anon NO lee clases_medios', () => como('anon', null, 'select * from clases_medios'), (r, e) => !!e);
-await espera('usuario NO lee clases_medios', () => como('authenticated', A, 'select * from clases_medios'), (r, e) => !!e);
+await espera('usuario NO lee clases_medios', () => como('authenticated', A, 'select * from clases_medios'), (r, e) => !!e || r.rows.length === 0);
 await espera('usuario NO lee eventos_pago', () => como('authenticated', A, 'select * from eventos_pago'), (r, e) => !!e);
 await espera('usuario ve solo su perfil', () => como('authenticated', A, 'select * from perfiles'), (r) => r?.rows.length === 1);
 await espera('usuario edita su nombre', () => como('authenticated', A, `update perfiles set nombre = 'Ana P' where id = '${A}' returning id`), (r) => r?.rows.length === 1);
@@ -126,7 +132,7 @@ await espera('anon no ve testimonio sin publicar', () => como('anon', null, 'sel
 await espera('anon no ve obra social inactiva', () => como('anon', null, 'select * from obras_sociales'), (r) => r?.rows.length === 1);
 await espera('usuario NO crea testimonios', () => como('authenticated', C, `insert into testimonios (texto, autor, permiso_at) values ('x','x',current_date)`), (r, e) => !!e);
 await espera('anon NO lee cupones', () => como('anon', null, 'select * from cupones'), (r, e) => !!e);
-await espera('usuario NO lee cupones', () => como('authenticated', C, 'select * from cupones'), (r, e) => !!e);
+await espera('usuario NO lee cupones', () => como('authenticated', C, 'select * from cupones'), (r, e) => !!e || r.rows.length === 0);
 await espera('usuario NO llama crear_compra', () => como('authenticated', C, `select * from crear_compra('${C}', '${alim}')`), (r, e) => !!e);
 await espera('usuario NO llama calcular_precio', () => como('authenticated', C, `select * from calcular_precio('${alim}', 'PRUEBA10')`), (r, e) => !!e);
 
@@ -189,8 +195,65 @@ await espera('registro: copia versión de términos y fecha', () => db.query(`se
 await espera('registro sin términos: quedan vacíos', () => db.query(`select * from perfiles where id = '${D}'`), (r) => r.rows[0].acepto_terminos_version === null && r.rows[0].acepto_terminos_at === null);
 await espera('backend registra un arrepentimiento', () => db.query(`insert into arrepentimientos (codigo, nombre, email) values ('ARR-1', 'Eva', 'e@x.com')`), (r, e) => !e);
 await espera('anon NO crea arrepentimientos', () => como('anon', null, `insert into arrepentimientos (codigo, nombre, email) values ('ARR-2', 'x', 'x@x.com')`), (r, e) => !!e);
-await espera('usuario NO lee arrepentimientos', () => como('authenticated', E, 'select * from arrepentimientos'), (r, e) => !!e);
+await espera('usuario NO lee arrepentimientos', () => como('authenticated', E, 'select * from arrepentimientos'), (r, e) => !!e || r.rows.length === 0);
 await espera('código de arrepentimiento único', () => db.query(`insert into arrepentimientos (codigo, nombre, email) values ('ARR-1', 'x', 'x@x.com')`), (r, e) => !!e);
+
+// ---------------- Migración 4: panel de administración ----------------
+console.log('\n--- panel de administración ---');
+const ADM = '66666666-6666-6666-6666-666666666666';
+await db.exec(`insert into auth.users (id, raw_user_meta_data, email) values ('${ADM}', '{"nombre":"Admin"}', 'admin@x.com')`);
+await db.exec(`update perfiles set rol = 'admin' where id = '${ADM}'`);
+const nuevoCurso = `insert into cursos (slug, titulo, resumen, formato) values ('nuevo-${Math.random().toString(36).slice(2, 7)}', 'Nuevo', 'r', 'PDF') returning id`;
+
+await espera('admin crea un curso', () => como('authenticated', ADM, nuevoCurso), (r, e) => !e && r.rows.length === 1);
+await espera('alumno NO crea cursos', () => como('authenticated', E, nuevoCurso), (r, e) => !!e);
+await espera('anon NO crea cursos', () => como('anon', null, nuevoCurso), (r, e) => !!e);
+const cursoAdm = (await db.query(`select id from cursos where titulo = 'Nuevo' limit 1`)).rows[0].id;
+await espera('admin edita precio', () => como('authenticated', ADM, `update cursos set precio = 5000 where id = '${cursoAdm}' returning precio`), (r) => Number(r?.rows[0]?.precio) === 5000);
+await espera('alumno NO edita precio', () => como('authenticated', E, `update cursos set precio = 1 where id = '${cursoAdm}' returning id`), (r, e) => !!e || r.rows.length === 0);
+await espera('admin crea una clase', () => como('authenticated', ADM, `insert into clases (curso_id, slug, titulo, tipo, orden) values ('${cursoAdm}', 'c1', 'Clase', 'pdf', 1) returning id`), (r, e) => !e);
+const claseAdm = (await db.query(`select id from clases where curso_id = '${cursoAdm}'`)).rows[0].id;
+await espera('admin carga el medio de la clase', () => como('authenticated', ADM, `insert into clases_medios (clase_id, pdf_ruta) values ('${claseAdm}', 'cursos/x/a.pdf')`), (r, e) => !e);
+await espera('admin ve los medios', () => como('authenticated', ADM, `select * from clases_medios where clase_id = '${claseAdm}'`), (r) => r?.rows.length === 1);
+await espera('alumno sigue sin ver medios', () => como('authenticated', E, 'select * from clases_medios'), (r, e) => !!e || r.rows.length === 0);
+await espera('admin ve todas las compras', () => como('authenticated', ADM, 'select * from compras'), (r) => r?.rows.length >= 2);
+await espera('alumno sigue viendo solo las suyas', () => como('authenticated', E, 'select * from compras'), (r) => r?.rows.length === 0);
+await espera('admin ve todos los turnos', () => como('authenticated', ADM, 'select * from turnos'), (r) => r?.rows.length >= 1);
+await espera('admin ve arrepentimientos', () => como('authenticated', ADM, 'select * from arrepentimientos'), (r) => r?.rows.length === 1);
+await espera('admin marca arrepentimiento atendido', () => como('authenticated', ADM, `update arrepentimientos set atendido_at = now(), respuesta = 'ok' returning id`), (r) => r?.rows.length === 1);
+await espera('alumno NO ve arrepentimientos', () => como('authenticated', E, 'select * from arrepentimientos'), (r, e) => !!e || r.rows.length === 0);
+await espera('admin crea cupón', () => como('authenticated', ADM, `insert into cupones (codigo, tipo, valor) values ('ADMIN20', 'porcentaje', 20)`), (r, e) => !e);
+await espera('alumno sigue sin ver cupones', () => como('authenticated', E, 'select * from cupones'), (r, e) => !!e || r.rows.length === 0);
+await espera('admin da acceso manual', () => como('authenticated', ADM, `insert into accesos (usuario_id, curso_id, origen) values ('${E}', '${cursoAdm}', 'manual')`), (r, e) => !e);
+await espera('admin NO puede inventar un acceso "compra"', () => como('authenticated', ADM, `insert into accesos (usuario_id, curso_id, origen) values ('${D}', '${cursoAdm}', 'compra')`), (r, e) => !!e);
+await espera('admin quita el acceso', () => como('authenticated', ADM, `update accesos set revocado_at = now() where usuario_id = '${E}' and curso_id = '${cursoAdm}' returning 1`), (r) => r?.rows.length === 1);
+await espera('admin edita testimonios y obras sociales', async () => {
+  await como('authenticated', ADM, `insert into testimonios (texto, autor, permiso_at) values ('t', 'a', current_date)`);
+  return como('authenticated', ADM, `insert into obras_sociales (nombre) values ('OSDE prueba') returning id`);
+}, (r, e) => !e);
+await espera('alumno NO edita obras sociales', () => como('authenticated', E, `insert into obras_sociales (nombre) values ('x')`), (r, e) => !!e);
+await espera('admin_usuarios: lista con email', () => como('authenticated', ADM, 'select * from admin_usuarios()'), (r) => r?.rows.some((u) => u.email === 'admin@x.com'));
+await espera('admin_usuarios: alumno rechazado', () => como('authenticated', E, 'select * from admin_usuarios()'), tiraError('Solo para administradores'));
+await espera('admin_usuarios: anon sin permiso', () => como('anon', null, 'select * from admin_usuarios()'), (r, e) => !!e);
+await espera('admin_resumen_ventas', () => como('authenticated', ADM, 'select * from admin_resumen_ventas()'), (r, e) => !e && r.rows.length >= 1);
+await espera('bucket materiales privado y solo PDF', () => db.query(`select * from storage.buckets where id = 'materiales'`), (r) => r.rows[0]?.public === false && r.rows[0].allowed_mime_types[0] === 'application/pdf');
+await espera('admin sube a materiales', () => como('authenticated', ADM, `insert into storage.objects (bucket_id, name) values ('materiales', 'cursos/x/a.pdf')`), (r, e) => !e);
+await espera('alumno NO sube a materiales', () => como('authenticated', E, `insert into storage.objects (bucket_id, name) values ('materiales', 'cursos/x/b.pdf')`), (r, e) => !!e);
+await espera('alumno NO ve archivos de materiales', () => como('authenticated', E, `select * from storage.objects where bucket_id = 'materiales'`), (r) => r?.rows.length === 0);
+const ordenes = async () => (await db.query(`select cl.slug from clases cl join cursos c on c.id = cl.curso_id where c.slug = 'primeros-meses' order by cl.orden`)).rows.map((r) => r.slug).join(',');
+const llanto = await id(`select cl.id from clases cl join cursos c on c.id = cl.curso_id where c.slug = 'primeros-meses' and cl.slug = 'llanto'`);
+await espera('admin sube una clase de lugar', async () => {
+  await como('authenticated', ADM, `select admin_mover_clase('${llanto}', -1)`);
+  return ordenes();
+}, (r) => r === 'bienvenida,llanto,sueno,material');
+await espera('mover la primera hacia arriba no hace nada', async () => {
+  const primera = await id(`select cl.id from clases cl join cursos c on c.id = cl.curso_id where c.slug = 'primeros-meses' and cl.slug = 'bienvenida'`);
+  await como('authenticated', ADM, `select admin_mover_clase('${primera}', -1)`);
+  return ordenes();
+}, (r) => r === 'bienvenida,llanto,sueno,material');
+await espera('alumno NO reordena clases', () => como('authenticated', E, `select admin_mover_clase('${llanto}', 1)`), tiraError('Solo para administradores'));
+await espera('curso con ventas no se borra', () => como('authenticated', ADM, `delete from cursos where slug = 'adolescencia-estar-cerca'`), (r, e) => !!e);
+await espera('admin borra curso sin ventas', () => como('authenticated', ADM, `delete from cursos where id = '${cursoAdm}' returning id`), (r) => r?.rows.length === 1);
 
 console.log(fallas ? `\n${fallas} FALLAS` : '\nTodo OK');
 process.exit(fallas ? 1 : 0);

@@ -50,19 +50,29 @@ export default function Inicio() {
             </div>
           </div>
           <div className="flex min-w-0 flex-[1_1_300px] justify-center">
-            {/* Reemplazar por la foto real: <img src="/img/felicitas.jpg" className="aspect-square w-full max-w-[420px] rounded-full border-[14px] border-menta object-cover" /> */}
-            <div className="flex aspect-square w-full max-w-[420px] items-center justify-center rounded-full border-[14px] border-menta bg-lavanda p-10 text-center font-semibold">
-              [Foto retrato de la Dra. Felicitas Pino]
-            </div>
+            <img
+              src="/img/felicitas-retrato.jpg"
+              alt="Retrato de la Dra. Felicitas Pino, sonriendo, con ambo blanco"
+              width="1080"
+              height="1080"
+              fetchpriority="high"
+              className="aspect-square w-full max-w-[420px] rounded-full border-[14px] border-menta bg-lavanda object-cover object-[50%_35%]"
+            />
           </div>
         </div>
       </section>
 
       {/* Sobre mí */}
       <section id="sobre" className="container-page flex scroll-mt-28 flex-wrap items-center gap-10 py-16 lg:gap-16 lg:py-24">
-        <div className="flex aspect-[4/5] max-h-[520px] min-w-0 flex-[1_1_300px] items-center justify-center rounded-card bg-menta p-8 text-center font-semibold">
-          [Foto en el consultorio]
-        </div>
+        {/* Foto provisoria de baja resolución (236×295): reemplazar por una de al menos 840×1050. */}
+        <img
+          src="/img/consultorio.jpg"
+          alt="Consultorio pediátrico con escritorio y sillas blancas"
+          width="236"
+          height="295"
+          loading="lazy"
+          className="aspect-[4/5] max-h-[520px] min-w-0 flex-[1_1_300px] rounded-card bg-menta object-cover"
+        />
         <div className="flex min-w-0 flex-[1.3_1_400px] flex-col gap-4">
           <Encabezado eyebrow="Sobre mí" titulo="Te invito a conocerme" />
           <p className="text-lg leading-relaxed">

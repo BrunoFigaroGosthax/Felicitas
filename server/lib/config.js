@@ -16,8 +16,7 @@ export const config = {
   bunny: {
     streamLibraryId: env.BUNNY_STREAM_LIBRARY_ID,
     streamTokenKey: env.BUNNY_STREAM_TOKEN_KEY,
-    cdnUrl: (env.BUNNY_CDN_URL || '').replace(/\/$/, ''),
-    cdnTokenKey: env.BUNNY_CDN_TOKEN_KEY,
+    streamApiKey: env.BUNNY_STREAM_API_KEY,
   },
   email: {
     resendKey: env.RESEND_API_KEY,
@@ -29,7 +28,7 @@ export const config = {
 export const configurado = {
   supabase: Boolean(config.supabase.url && config.supabase.anonKey && config.supabase.serviceKey),
   mercadoPago: Boolean(config.mercadoPago.accessToken),
-  bunny: Boolean(config.bunny.streamLibraryId && config.bunny.streamTokenKey && config.bunny.cdnUrl && config.bunny.cdnTokenKey),
+  bunny: Boolean(config.bunny.streamLibraryId && config.bunny.streamTokenKey && config.bunny.streamApiKey),
   email: Boolean(config.email.resendKey),
 };
 

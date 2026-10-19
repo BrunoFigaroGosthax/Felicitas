@@ -95,6 +95,7 @@ test('compras, clases y webhooks sin integraciones: 503 con mensaje claro', asyn
   assert.equal((await pedir('/compras/precio', { method: 'POST', body: {} })).status, 503);
   assert.equal((await pedir('/clases/00000000-0000-0000-0000-000000000000/medio')).status, 503);
   assert.equal((await pedir('/webhooks/mercadopago?type=payment&data.id=1', { method: 'POST', body: {} })).status, 503);
+  assert.equal((await pedir('/admin/videos', { method: 'POST', body: {} })).status, 503);
 });
 
 test('arrepentimiento: valida y devuelve código de seguimiento', async () => {

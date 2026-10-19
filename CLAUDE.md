@@ -11,7 +11,7 @@ Criterio de infraestructura: arrancar con lo más económico y escalar cuando ha
 
 - Frontend: React 18 + Vite 6 + Tailwind CSS v4 (`@tailwindcss/vite`) + React Router 6. JavaScript (JSX).
 - Backend: Express en `server/`, corre como **función serverless de Vercel** (`api/index.js`). Mismo dominio que el frontend.
-- Servicios: Supabase (base de datos y cuentas), Bunny (videos y PDF), Mercado Pago (pagos), Resend (emails), DrApp (agenda).
+- Servicios: Supabase (base de datos, cuentas y PDF), Bunny Stream (videos), Mercado Pago (pagos), Resend (emails), DrApp (agenda).
 - Un solo `package.json` en la raíz (Vercel instala desde ahí).
 
 ## Comandos
@@ -48,6 +48,15 @@ npm run check        # todo lo anterior; lo mismo corre en CI (.github/workflows
 - `scripts/prerender.mjs`: HTML por página pública con título y Open Graph, `app.html` (fallback de la SPA), `sitemap.xml`, `robots.txt`. Necesita `SITE_URL` al hacer build.
 - `vercel.json`: rewrites (`/api` → función; resto → `app.html`), `cleanUrls`, CSP y encabezados de seguridad. Si se agrega un dominio externo (analítica, etc.), sumarlo a la CSP.
 
+## Panel de administración (`/admin`)
+
+- Acceso: `perfiles.rol = 'admin'`, asignado a mano en Supabase (`update public.perfiles set rol = 'admin' where id in (select id from auth.users where email = '...')`). El encabezado muestra "Panel" a los admin (`useSesion().esAdmin`: true / false / null mientras carga).
+- Secciones en `src/pages/admin/` (cargadas con `lazy`): cursos y clases (con subida de video y PDF), ventas, alumnos (dar/quitar acceso), cupones, turnos, arrepentimientos, contenido (testimonios y obras sociales). Piezas comunes en `src/components/admin/ui.jsx`.
+- `src/services/admin.js` habla directo con Supabase con la sesión del admin (políticas `es_admin()`, migración `20261018000000_panel_admin.sql`). Solo los videos pasan por el backend (`server/routes/admin.js`), que tiene la API key de Bunny.
+- **PDF**: Supabase Storage, bucket privado `materiales` (solo PDF, 50 MB). El alumno recibe un link firmado del backend (`/api/clases/:id/medio`).
+- **Videos**: Bunny Stream. El navegador sube directo a Bunny por TUS con una firma del backend (`tus-js-client`), sin pasar por Vercel. El estado y la duración se consultan a Bunny.
+- Un curso con ventas no se borra (FK): se despublica. Borrar un curso o clase borra también sus PDF y videos.
+
 ## Base de datos (Supabase)
 
 - Migraciones en `supabase/migrations/` (en orden), `supabase/seed.sql` (solo desarrollo), pruebas en `supabase/tests/`.
@@ -70,13 +79,13 @@ npm run check        # todo lo anterior; lo mismo corre en CI (.github/workflows
 
 ## Pendientes
 
-1. **Conectar servicios**: crear proyecto Supabase (aplicar migraciones, activar confirmación de email, plantillas de email en español, SMTP propio con Resend), Bunny (biblioteca Stream y pull zone con token authentication), Mercado Pago (credenciales y webhook a `/api/webhooks/mercadopago` con su secreto), Vercel (variables de `.env.example` y `server/.env.example`).
+1. **Conectar servicios**: Supabase ya conectado (proyecto `bvexuvbchnvbsiuydgtm`, migraciones aplicadas); falta en Auth: Site URL y Redirect URLs, plantillas de email en español, SMTP propio con Resend. Bunny Stream (biblioteca con token authentication y API key), Mercado Pago (credenciales y webhook a `/api/webhooks/mercadopago` con su secreto), Vercel (variables de `.env.example` y `server/.env.example`).
 2. **DrApp**: conseguir documentación y credenciales; implementar `server/lib/drapp.js` (disponibilidad y reserva, horario ya ocupado → 409). Definir si la confirmación por WhatsApp la manda DrApp.
 3. **Legal**: revisar con abogado privacidad, términos y arrepentimiento (`[corchetes]` en `src/pages/Privacidad.jsx`, `Terminos.jsx`, `src/data/legal.js`); registrar la base en la AAIP; facturación en ARCA con el contador.
 4. **Contenido real**: fotos, bio, matrícula, dirección, obras sociales, precios, testimonios (con permiso), descripciones de clases, imagen para compartir `public/img/og.png` (1200×630).
 5. **Logos y fuentes**: pedir SVG/AI original; archivos de Nekta, Talina y Pogonia y activarlas en `index.css`.
 6. Dominio `.com.ar`, analítica (Plausible no requiere banner de cookies), Sentry, monitoreo de caída, backups de Supabase (plan Pro o backup programado).
-7. Panel simple para la doctora (testimonios, cupones, obras sociales, arrepentimientos); por ahora, el panel de Supabase.
+7. Marcar las cuentas admin (Bruno y la doctora) cuando se registren. Cargar las claves de Bunny Stream para habilitar la subida de videos.
 
 ## Referencias de diseño
 

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createHash, createHmac } from 'node:crypto';
 import { test } from 'node:test';
-import { urlArchivo, urlVideo } from './bunny.js';
+import { estadoDesdeBunny, firmaSubida, urlVideo } from './bunny.js';
 import { estadoCompra, firmaValida } from './mercadopago.js';
 import { esEmail, esFechaReal, esTelefono, HORA, texto } from './validar.js';
 import { transicionValida } from '../routes/webhooks.js';
@@ -56,13 +56,19 @@ test('Bunny Stream: token = sha256(clave + videoId + vence)', () => {
   assert.equal(url.searchParams.get('token'), createHash('sha256').update(`kvideo-guid${vence}`).digest('hex'));
 });
 
-test('Bunny CDN: token base64url de sha256(clave + ruta + vence)', () => {
-  const url = new URL(urlArchivo('/cursos/fiebre/guia.pdf', { clave: 'k', cdn: 'https://felicitas.b-cdn.net', duracionS: 60 }));
-  assert.equal(url.pathname, '/cursos/fiebre/guia.pdf');
-  const vence = url.searchParams.get('expires');
-  const esperado = createHash('sha256').update(`k/cursos/fiebre/guia.pdf${vence}`).digest('base64url');
-  assert.equal(url.searchParams.get('token'), esperado);
-  assert.doesNotMatch(url.searchParams.get('token'), /[+/=]/);
+test('Bunny TUS: firma = sha256(biblioteca + apiKey + vence + videoId)', () => {
+  const f = firmaSubida('video-guid', { biblioteca: '42', apiKey: 'api', duracionS: 60 });
+  assert.equal(f.endpoint, 'https://video.bunnycdn.com/tusupload');
+  assert.equal(f.biblioteca, '42');
+  assert.ok(f.vence > Date.now() / 1000);
+  assert.equal(f.firma, createHash('sha256').update(`42api${f.vence}video-guid`).digest('hex'));
+});
+
+test('Bunny: estados del video', () => {
+  assert.equal(estadoDesdeBunny(0), 'subiendo');
+  assert.equal(estadoDesdeBunny(3), 'procesando');
+  assert.equal(estadoDesdeBunny(4), 'listo');
+  assert.equal(estadoDesdeBunny(6), 'error');
 });
 
 test('Validaciones', () => {

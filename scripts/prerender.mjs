@@ -86,7 +86,7 @@ writeFileSync(
 
 writeFileSync(
   join(dist, 'robots.txt'),
-  ['User-agent: *', 'Disallow: /api/', 'Disallow: /mi-cuenta', 'Disallow: /nueva-clave', 'Disallow: /pago/', '', `Sitemap: ${SITIO}/sitemap.xml`, ''].join('\n'),
+  ['User-agent: *', 'Disallow: /api/', 'Disallow: /admin', 'Disallow: /mi-cuenta', 'Disallow: /nueva-clave', 'Disallow: /pago/', '', `Sitemap: ${SITIO}/sitemap.xml`, ''].join('\n'),
 );
 
 console.log(`prerender: ${paginas.length} páginas, sitemap.xml y robots.txt (${SITIO})`);

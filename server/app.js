@@ -1,5 +1,6 @@
 // App de Express. En local la levanta server/index.js; en Vercel, api/index.js (función serverless).
 import express from 'express';
+import adminRutas from './routes/admin.js';
 import arrepentimiento from './routes/arrepentimiento.js';
 import clases from './routes/clases.js';
 import compras from './routes/compras.js';
@@ -17,6 +18,7 @@ app.use('/api/compras', compras);
 app.use('/api/clases', clases);
 app.use('/api/arrepentimiento', arrepentimiento);
 app.use('/api/webhooks', webhooks);
+app.use('/api/admin', adminRutas);
 
 app.use('/api', (_req, res) => res.status(404).json({ error: 'No encontrado.' }));
 

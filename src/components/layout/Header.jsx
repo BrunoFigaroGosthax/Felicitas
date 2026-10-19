@@ -13,7 +13,7 @@ const links = [
 export default function Header() {
   const [abierto, setAbierto] = useState(false);
   const location = useLocation();
-  const { usuario } = useSesion();
+  const { usuario, esAdmin } = useSesion();
   const cuenta = usuario ? { to: '/mi-cuenta', label: 'Mi cuenta' } : { to: '/ingresar', label: 'Ingresar' };
 
   // Cerrar el menú móvil al navegar.
@@ -44,6 +44,11 @@ export default function Header() {
               {l.label}
             </NavLink>
           ))}
+          {esAdmin && (
+            <NavLink to="/admin" className={linkClass('/admin')}>
+              Panel
+            </NavLink>
+          )}
           <NavLink to={cuenta.to} className={linkClass(cuenta.to)} end>
             {cuenta.label}
           </NavLink>
@@ -74,6 +79,11 @@ export default function Header() {
                 {l.label}
               </NavLink>
             ))}
+            {esAdmin && (
+              <NavLink to="/admin" className={linkClass('/admin')}>
+                Panel
+              </NavLink>
+            )}
             <NavLink to={cuenta.to} className={linkClass(cuenta.to)} end>
               {cuenta.label}
             </NavLink>
