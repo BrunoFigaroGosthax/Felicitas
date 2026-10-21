@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import Aviso from '../components/ui/Aviso.jsx';
 import Badge from '../components/ui/Badge.jsx';
@@ -11,6 +11,7 @@ import { useSesion } from '../context/Sesion.jsx';
 import useProgreso from '../hooks/useProgreso.js';
 import useTitulo from '../hooks/useTitulo.js';
 import { USE_MOCKS } from '../lib/entorno.js';
+import { useReproductor } from '../lib/reproductor.js';
 import { supabase } from '../lib/supabase.js';
 import { calcularPrecio, comprar, emitirCertificado, obtenerCurso, obtenerMedio, puedeVerClase } from '../services/cursos.js';
 import { pesos, precioTexto } from '../services/formato.js';
@@ -34,12 +35,17 @@ function useMedio(clase, habilitada) {
 
 const volverAca = (pathname) => `/ingresar?volver=${encodeURIComponent(pathname)}`;
 
-function Reproductor({ clase, habilitada, medio, error }) {
-  if (habilitada && clase.tipo === 'video' && medio?.video) {
+function Reproductor({ clase, habilitada, medio, error, inicio, on }) {
+  const iframeRef = useRef(null);
+  const src = habilitada && clase.tipo === 'video' ? medio?.video : null;
+  useReproductor(iframeRef, src, inicio, on);
+
+  if (src) {
     return (
       <div className="relative aspect-video overflow-hidden rounded-card bg-ink">
         <iframe
-          src={medio.video}
+          ref={iframeRef}
+          src={src}
           title={clase.titulo}
           className="absolute inset-0 h-full w-full border-0"
           allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
@@ -245,7 +251,7 @@ export default function Curso() {
   const [actual, setActual] = useState(0);
   const [recarga, setRecarga] = useState(0);
   const [recienComprado, setRecienComprado] = useState(false);
-  const { vistas, marcarVista, enCuenta, error: errorProgreso } = useProgreso(curso || null);
+  const { vistas, marcarVista, posiciones, recordarPosicion, enCuenta, error: errorProgreso } = useProgreso(curso || null);
   useTitulo(curso === null ? 'Página no encontrada' : curso?.titulo || 'Cursos');
 
   useEffect(() => {
@@ -268,6 +274,33 @@ export default function Curso() {
   const clase = curso?.clases[actual];
   const habilitada = Boolean(curso && clase && puedeVerClase(curso, clase));
   const { medio, error: errorMedio } = useMedio(clase, habilitada);
+
+  // Minuto del video: se guarda cada 15 segundos de avance, al pausar y al cambiar de clase.
+  // Cerca del final se guarda 0, así la próxima vez arranca de nuevo.
+  const avance = useRef({ claseId: null, seg: 0, dur: 0, guardado: 0 });
+  const guardarAvance = useCallback(() => {
+    const a = avance.current;
+    if (!a.claseId || Math.abs(a.seg - a.guardado) < 1) return;
+    recordarPosicion(a.claseId, a.dur && a.dur - a.seg < 15 ? 0 : a.seg);
+    a.guardado = a.seg;
+  }, [recordarPosicion]);
+  const claseId = clase?.id;
+  useEffect(() => {
+    avance.current = { claseId, seg: 0, dur: 0, guardado: 0 };
+    return guardarAvance;
+  }, [claseId, guardarAvance]);
+  const eventosVideo = {
+    onTiempo: (seg, dur) => {
+      Object.assign(avance.current, { seg, dur });
+      if (Math.abs(seg - avance.current.guardado) >= 15) guardarAvance();
+    },
+    onPausa: guardarAvance,
+    onFin: () => {
+      Object.assign(avance.current, { seg: 0, guardado: 0 });
+      recordarPosicion(claseId, 0);
+      if (!vistas.includes(claseId)) marcarVista(claseId);
+    },
+  };
 
   if (errorCarga) return <div className="container-page py-16"><Aviso tono="error">{errorCarga}</Aviso></div>;
   if (curso === undefined) return <p className="container-page py-16 text-ink-muted">Cargando curso…</p>;
@@ -298,7 +331,10 @@ export default function Curso() {
 
       <div className="flex flex-wrap items-start gap-7">
         <div className="flex min-w-0 flex-[999_1_600px] flex-col gap-5">
-          <Reproductor clase={clase} habilitada={habilitada} medio={medio} error={errorMedio} />
+          <Reproductor clase={clase} habilitada={habilitada} medio={medio} error={errorMedio} inicio={posiciones[clase.id] || 0} on={eventosVideo} />
+          {habilitada && clase.tipo === 'video' && medio?.video && posiciones[clase.id] > 5 && (
+            <p className="-mt-2 text-sm text-ink-muted">Retomás desde el minuto {Math.floor(posiciones[clase.id] / 60)}:{String(Math.floor(posiciones[clase.id] % 60)).padStart(2, '0')}.</p>
+          )}
 
           <div className="flex flex-col gap-2.5">
             <div className="flex flex-wrap gap-2">

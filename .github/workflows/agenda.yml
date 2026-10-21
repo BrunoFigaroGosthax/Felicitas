@@ -1,0 +1,16 @@
+# Sincroniza la agenda entre sistemas de turnos cada 15 minutos (el plan gratis de Vercel
+# solo permite tareas diarias). Inactivo hasta configurar en GitHub → Settings → Secrets and variables:
+#   variable SITE_URL (ej.: https://www.ejemplo.com.ar) y secreto CRON_SECRET (el mismo que en Vercel).
+name: Agenda
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  reconciliar:
+    if: ${{ vars.SITE_URL != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -fsS --max-time 60 -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" "${{ vars.SITE_URL }}/api/agenda/reconciliar"

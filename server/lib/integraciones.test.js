@@ -71,6 +71,27 @@ test('Bunny: estados del video', () => {
   assert.equal(estadoDesdeBunny(6), 'error');
 });
 
+test('Link de cancelación: firma válida, alterada o ajena', async () => {
+  const { leerTokenTurno, tokenTurno } = await import('./tokens.js');
+  const id = '6f1c2e3d-0000-4000-8000-000000000001';
+  const t = tokenTurno(id);
+  assert.equal(leerTokenTurno(t), id);
+  assert.equal(leerTokenTurno(`${id}.${t.split('.')[1].slice(0, -1)}x`), null);
+  assert.equal(leerTokenTurno(`6f1c2e3d-0000-4000-8000-000000000002.${t.split('.')[1]}`), null);
+  assert.equal(leerTokenTurno(''), null);
+  assert.equal(leerTokenTurno(undefined), null);
+});
+
+test('Meta de páginas: escapa y reemplaza título y descripción', async () => {
+  const { conMeta } = await import('./meta.js');
+  const base = '<html><head><title>X</title><meta name="description" content="Y" /></head></html>';
+  const html = conMeta(base, { titulo: 'Fiebre "y" <tos>', descripcion: 'Desc & más', url: 'https://a.com/cursos/x', imagen: 'https://a.com/og.png' });
+  assert.match(html, /<title>Fiebre &quot;y&quot; &lt;tos&gt;<\/title>/);
+  assert.match(html, /<meta name="description" content="Desc &amp; más" \/>/);
+  assert.match(html, /og:image" content="https:\/\/a.com\/og.png"/);
+  assert.doesNotMatch(html, /<tos>/);
+});
+
 test('Validaciones', () => {
   assert.equal(esEmail('ana@correo.com'), true);
   assert.equal(esEmail('ana@correo'), false);

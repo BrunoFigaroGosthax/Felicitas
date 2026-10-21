@@ -5,13 +5,34 @@ const fmtFecha = new Intl.DateTimeFormat('es-AR', { weekday: 'long', day: 'numer
 const fecha = (iso) => fmtFecha.format(new Date(`${iso}T12:00:00Z`));
 const firma = '\n\nFelicitas · Pediatría con propósito';
 
-export const turnoConfirmado = ({ responsable, fecha: dia, hora }) => ({
+const cancelarTexto = (linkCancelar) =>
+  linkCancelar
+    ? `Si no podés venir, cancelalo con 24 horas de anticipación desde este link:\n${linkCancelar}\n`
+    : `Si no podés venir, avisanos con 24 horas de anticipación respondiendo este email.\n`;
+
+export const turnoConfirmado = ({ responsable, fecha: dia, hora, linkCancelar }) => ({
   asunto: 'Tu turno quedó reservado',
   texto:
     `Hola, ${responsable}:\n\nTu turno quedó reservado para el ${fecha(dia)} a las ${hora}.\n` +
     `Dirección: [Dirección del consultorio].\n\n` +
-    `Si no podés venir, avisanos con 24 horas de anticipación respondiendo este email.\n` +
+    cancelarTexto(linkCancelar) +
     `Ante una urgencia, no esperes al turno: acudí a la guardia más cercana.${firma}`,
+});
+
+export const turnoRecordatorio = ({ responsable, fecha: dia, hora, linkCancelar }) => ({
+  asunto: `Recordatorio: tu turno es mañana a las ${hora}`,
+  texto:
+    `Hola, ${responsable}:\n\nTe recordamos que mañana, ${fecha(dia)}, tenés turno a las ${hora}.\n` +
+    `Dirección: [Dirección del consultorio].\n\n` +
+    (linkCancelar ? `Si al final no podés venir, cancelalo acá así otra familia puede usar el horario:\n${linkCancelar}\n` : '') +
+    `Ante una urgencia, no esperes al turno: acudí a la guardia más cercana.${firma}`,
+});
+
+export const turnoCancelado = ({ responsable, fecha: dia, hora }) => ({
+  asunto: 'Cancelaste tu turno',
+  texto:
+    `Hola, ${responsable}:\n\nCancelamos tu turno del ${fecha(dia)} a las ${hora}.\n` +
+    `Cuando quieras, podés pedir uno nuevo en ${config.siteUrl}/turnos.${firma}`,
 });
 
 export const compraAprobada = ({ curso }) => ({

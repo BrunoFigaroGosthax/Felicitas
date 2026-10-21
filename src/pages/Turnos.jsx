@@ -123,6 +123,11 @@ export default function Turnos() {
         setPaso(4);
       } catch (err) {
         setErrorEnvio(err.message);
+        if (err.status === 409) {
+          // Alguien tomó el horario recién (por la web o en otro sistema): se actualizan los horarios.
+          setDatos((d) => ({ ...d, hora: '' }));
+          setReintento((n) => n + 1);
+        }
       } finally {
         setEnviando(false);
       }
@@ -175,7 +180,7 @@ export default function Turnos() {
                 <Field label="Nombre y apellido del niño o niña" placeholder="Ej.: Sofía Pérez" value={datos.paciente} onChange={set('paciente')} error={errores.paciente} autoComplete="off" />
                 <Field label="Fecha de nacimiento" type="date" max={hoy} value={datos.nacimiento} onChange={set('nacimiento')} error={errores.nacimiento} />
                 <Field label="Adulto responsable" placeholder="Tu nombre y apellido" value={datos.responsable} onChange={set('responsable')} error={errores.responsable} autoComplete="name" />
-                <Field label="WhatsApp" type="tel" placeholder="11 2345 6789" value={datos.telefono} onChange={set('telefono')} error={errores.telefono} ayuda="Te mandamos ahí la confirmación." autoComplete="tel" />
+                <Field label="WhatsApp" type="tel" placeholder="11 2345 6789" value={datos.telefono} onChange={set('telefono')} error={errores.telefono} ayuda="Por si necesitamos avisarte algo del turno." autoComplete="tel" />
                 <Field label="Email" type="email" placeholder="nombre@correo.com" value={datos.email} onChange={set('email')} error={errores.email} autoComplete="email" />
                 <Field label="Obra social" as="select" value={datos.obraSocial} onChange={set('obraSocial')} error={errores.obraSocial}>
                   <option value="">Elegí una opción</option>
@@ -290,10 +295,11 @@ export default function Turnos() {
               </span>
               <h2 ref={tituloRef} tabIndex={-1} className="text-[32px] leading-tight outline-none">¡Listo! Tu turno quedó reservado</h2>
               <p className="text-[17px]">
-                {diaLargo} a las {datos.hora}. Te mandamos la confirmación por WhatsApp y email, con la dirección del consultorio.
+                {diaLargo} a las {datos.hora}. Te mandamos la confirmación por email a {datos.email}, con la dirección del consultorio. El día
+                anterior te llega un recordatorio.
               </p>
               <p className="text-[15px] text-ink-muted">
-                Si no podés venir, avisá con 24 horas de anticipación desde el mismo mensaje.
+                Si no podés venir, cancelalo con 24 horas de anticipación desde el link del email: así el horario queda libre para otra familia.
               </p>
               <div className="flex flex-wrap gap-3 pt-2">
                 <ButtonLink to="/">Volver al inicio</ButtonLink>

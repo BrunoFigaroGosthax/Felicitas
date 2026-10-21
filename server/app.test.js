@@ -75,13 +75,19 @@ test('turnos: validación, consentimiento, alta y límite de intentos', async ()
   // 3: nacimiento futuro
   assert.equal((await pedir('/turnos', { method: 'POST', body: { ...turno, nacimiento: enDias(3) } })).status, 400);
 
-  // 4 y 5: altas correctas
-  for (let i = 0; i < 2; i++) {
-    const ok = await pedir('/turnos', { method: 'POST', body: turno });
-    assert.equal(ok.status, 201);
-    assert.equal(ok.data.fecha, turno.fecha);
-    assert.equal(ok.data.hora, turno.hora);
-  }
+  // 4: horario ocupado → 409 (se revisa la agenda justo antes de reservar)
+  const { horarios } = (await pedir(`/turnos/disponibilidad?fecha=${turno.fecha}`)).data;
+  const ocupado = horarios.find((h) => !h.disponible).hora;
+  const libre = horarios.find((h) => h.disponible).hora;
+  const choque = await pedir('/turnos', { method: 'POST', body: { ...turno, hora: ocupado } });
+  assert.equal(choque.status, 409);
+  assert.match(choque.data.error, /se acaba de ocupar/);
+
+  // 5: alta correcta en un horario libre
+  const ok = await pedir('/turnos', { method: 'POST', body: { ...turno, hora: libre } });
+  assert.equal(ok.status, 201);
+  assert.equal(ok.data.fecha, turno.fecha);
+  assert.equal(ok.data.hora, libre);
 
   // 6: supera el límite de 5 por IP
   const limitado = await pedir('/turnos', { method: 'POST', body: turno });
@@ -96,6 +102,29 @@ test('compras, clases y webhooks sin integraciones: 503 con mensaje claro', asyn
   assert.equal((await pedir('/clases/00000000-0000-0000-0000-000000000000/medio')).status, 503);
   assert.equal((await pedir('/webhooks/mercadopago?type=payment&data.id=1', { method: 'POST', body: {} })).status, 503);
   assert.equal((await pedir('/admin/videos', { method: 'POST', body: {} })).status, 503);
+});
+
+test('cancelación con link: token inválido o sin base → error claro', async () => {
+  const sinBase = await pedir('/turnos/cancelar?t=abc.def');
+  assert.equal(sinBase.status, 503);
+  assert.equal((await pedir('/turnos/cancelar', { method: 'POST', body: { t: 'x' } })).status, 503);
+});
+
+test('tareas programadas: sin CRON_SECRET no se ejecutan; con secreto incorrecto, 401', async () => {
+  assert.equal((await pedir('/agenda/reconciliar')).status, 503);
+  process.env.CRON_SECRET = 'secreto-prueba';
+  const malo = await fetch(`${base}/agenda/reconciliar`, { headers: { Authorization: 'Bearer otro' } });
+  assert.equal(malo.status, 401);
+  const bueno = await fetch(`${base}/agenda/reconciliar`, { headers: { Authorization: 'Bearer secreto-prueba' } });
+  assert.equal(bueno.status, 200);
+  const r = await bueno.json();
+  assert.deepEqual([r.creados, r.liberados, r.pendientes], [0, 0, 0]);
+  delete process.env.CRON_SECRET;
+});
+
+test('aviso de un sistema no configurado → 404', async () => {
+  assert.equal((await pedir('/agenda/avisos/otro', { method: 'POST', body: {} })).status, 404);
+  assert.equal((await pedir('/agenda/avisos/inexistente', { method: 'POST', body: {} })).status, 404);
 });
 
 test('arrepentimiento: valida y devuelve código de seguimiento', async () => {

@@ -45,8 +45,23 @@ npm run check        # todo lo anterior; lo mismo corre en CI (.github/workflows
 - `src/hooks/`: `useProgreso(curso)` (cuenta si hay sesión, si no localStorage), `useTitulo` (llamarlo en cada página).
 - `server/app.js` (rutas), `server/routes/`: `turnos`, `compras`, `clases` (URLs firmadas de Bunny), `webhooks` (Mercado Pago), `arrepentimiento`.
 - `server/lib/`: `supabase`, `auth` (JWT de Supabase), `mercadopago`, `bunny`, `email` + `plantillas`, `drapp` (**pendiente**), `limite` (rate limit por IP), `validar`.
-- `scripts/prerender.mjs`: HTML por página pública con título y Open Graph, `app.html` (fallback de la SPA), `sitemap.xml`, `robots.txt`. Necesita `SITE_URL` al hacer build.
+- `scripts/prerender.mjs`: HTML de las páginas públicas fijas con título y Open Graph, `app.html` (fallback de la SPA) y `robots.txt`. Necesita `SITE_URL` al hacer build. Las páginas de cada curso y el `sitemap.xml` se arman en el momento con la base (`server/routes/paginas.js`, reescritos en `vercel.json`): un curso cargado desde el panel no necesita volver a publicar. Meta compartida en `server/lib/meta.js`. Imagen para compartir: `public/img/og.png`.
+- Video: el reproductor de Bunny se controla con Player.js (`src/lib/reproductor.js`): guarda el minuto (`progreso.posicion_segundos`), retoma y marca la clase como vista al terminar. Probado con un reproductor simulado; verificar con Bunny real.
+- `supabase/templates/`: emails de Supabase Auth en español (pegarlos en Authentication → Emails).
 - `vercel.json`: rewrites (`/api` → función; resto → `app.html`), `cleanUrls`, CSP y encabezados de seguridad. Si se agrega un dominio externo (analítica, etc.), sumarlo a la CSP.
+
+## Agenda con varios sistemas de turnos (`server/lib/agenda/`)
+
+La doctora toma turnos en DrApp y en otro sistema (pendiente: saber cuál). Reglas, sin excepciones:
+- **A.** Cada turno vive en UN solo sistema, con los datos del paciente.
+- **B.** A los demás solo se les manda un "ocupado" (fecha, hora, duración), nunca datos del paciente.
+- **C.** La web no tiene agenda propia: ofrece lo libre en TODOS los sistemas y reserva en el principal (DrApp). Justo antes de reservar vuelve a chequear (409 si se ocupó). Si un sistema no responde, no se ofrecen horarios.
+- `nucleo.js`: lógica (disponibilidad, reservar, cancelar, avisos, reconciliar) con adaptadores; probada con sistemas simulados en `nucleo.test.js`. Una vez reservado, nada posterior puede hacer fallar la respuesta (evita turnos dobles).
+- Adaptadores: `drapp.js` (principal; datos de ejemplo hasta tener la API) y `otro.js` (plantilla). Contrato documentado arriba de `nucleo.js`.
+- `agenda_bloqueos` registra cada "ocupado" puesto; los avisos sobre nuestros propios bloqueos se ignoran (sin bucles).
+- Webhooks: `POST /api/agenda/avisos/:sistema`. Revisión periódica: `GET /api/agenda/reconciliar` (cron diario de Vercel + workflow `.github/workflows/agenda.yml` cada 15 min, inactivo hasta configurar `SITE_URL` y `CRON_SECRET` en GitHub) y botón "Sincronizar ahora" en el panel.
+- Recordatorios por email el día anterior (`/api/agenda/recordatorios`, cron diario). Cancelación por el paciente con link firmado (`/turnos/cancelar?t=…`, `server/lib/tokens.js`).
+- No se le manda a la doctora un email por cada turno: sería un sistema más recibiendo datos de pacientes (los sistemas de turnos ya le avisan).
 
 ## Panel de administración (`/admin`)
 

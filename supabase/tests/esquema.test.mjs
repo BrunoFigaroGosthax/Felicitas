@@ -252,6 +252,23 @@ await espera('mover la primera hacia arriba no hace nada', async () => {
   return ordenes();
 }, (r) => r === 'bienvenida,llanto,sueno,material');
 await espera('alumno NO reordena clases', () => como('authenticated', E, `select admin_mover_clase('${llanto}', 1)`), tiraError('Solo para administradores'));
+// ---------------- Migración 5: agenda multisistema y portadas ----------------
+await espera('turnos: sistema por defecto drapp y externo_id', () => db.query(`select sistema, externo_id from turnos limit 1`), (r) => r.rows[0]?.sistema === 'drapp');
+await espera('turnos: mismo id externo en distinto sistema se permite', async () => {
+  await db.query(`insert into turnos (sistema, externo_id, fecha, hora, motivo, responsable_nombre, telefono, email, consentimiento_version) values ('drapp', 'X1', '2026-11-01', '09:00', 'control', 'a', '1', 'a@b.c', 'v')`);
+  return db.query(`insert into turnos (sistema, externo_id, fecha, hora, motivo, responsable_nombre, telefono, email, consentimiento_version) values ('otro', 'X1', '2026-11-01', '10:00', 'control', 'a', '1', 'a@b.c', 'v')`);
+}, (r, e) => !e);
+await espera('turnos: mismo id externo en el mismo sistema se rechaza', () => db.query(`insert into turnos (sistema, externo_id, fecha, hora, motivo, responsable_nombre, telefono, email, consentimiento_version) values ('drapp', 'X1', '2026-11-01', '11:00', 'control', 'a', '1', 'a@b.c', 'v')`), (r, e) => !!e);
+const bloqueo = `insert into agenda_bloqueos (origen_sistema, origen_id, destino_sistema, fecha, hora) values ('drapp', 'T1', 'otro', '2026-11-01', '09:00')`;
+await espera('backend registra un bloqueo', () => db.query(bloqueo), (r, e) => !e);
+await espera('bloqueo duplicado se rechaza', () => db.query(bloqueo), (r, e) => !!e);
+await espera('bloqueo hacia el mismo sistema se rechaza', () => db.query(`insert into agenda_bloqueos (origen_sistema, origen_id, destino_sistema, fecha, hora) values ('otro', 'T2', 'otro', '2026-11-01', '09:00')`), (r, e) => !!e);
+await espera('alumno NO ve bloqueos', () => como('authenticated', E, 'select * from agenda_bloqueos'), (r, e) => !!e || r.rows.length === 0);
+await espera('alumno NO crea bloqueos', () => como('authenticated', E, `insert into agenda_bloqueos (origen_sistema, origen_id, destino_sistema, fecha, hora) values ('a', 'b', 'c', '2026-11-01', '09:00')`), (r, e) => !!e);
+await espera('admin ve bloqueos', () => como('authenticated', ADM, 'select * from agenda_bloqueos'), (r) => r?.rows.length === 1);
+await espera('bucket portadas público y solo imágenes', () => db.query(`select * from storage.buckets where id = 'portadas'`), (r) => r.rows[0]?.public === true && r.rows[0].allowed_mime_types.includes('image/webp'));
+await espera('admin sube portada', () => como('authenticated', ADM, `insert into storage.objects (bucket_id, name) values ('portadas', 'a.jpg')`), (r, e) => !e);
+await espera('alumno NO sube portada', () => como('authenticated', E, `insert into storage.objects (bucket_id, name) values ('portadas', 'b.jpg')`), (r, e) => !!e);
 await espera('curso con ventas no se borra', () => como('authenticated', ADM, `delete from cursos where slug = 'adolescencia-estar-cerca'`), (r, e) => !!e);
 await espera('admin borra curso sin ventas', () => como('authenticated', ADM, `delete from cursos where id = '${cursoAdm}' returning id`), (r) => r?.rows.length === 1);
 

@@ -18,6 +18,8 @@ export async function api(path, { method = 'GET', body } = {}) {
     throw new Error('No pudimos conectarnos. Revisá tu conexión y probá de nuevo.');
   }
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || 'No pudimos completar la operación. Probá de nuevo.');
+  if (!res.ok) {
+    throw Object.assign(new Error(data.error || 'No pudimos completar la operación. Probá de nuevo.'), { status: res.status });
+  }
   return data;
 }

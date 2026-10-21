@@ -118,7 +118,7 @@ export default function Inicio() {
           <div className="flex min-w-0 flex-[1_1_340px] flex-col gap-3.5">
             <h2 className="text-[clamp(30px,3.6vw,44px)] leading-[1.08]">Pedí tu turno online</h2>
             <p className="text-[17px]">
-              Elegí el día y el horario que te quedan cómodos. Te llega la confirmación por WhatsApp y email.
+              Elegí el día y el horario que te quedan cómodos. Te llega la confirmación por email y un recordatorio el día anterior.
             </p>
             <div>
               <ButtonLink to="/turnos" size="lg" variante="amarillo">Pedir turno</ButtonLink>

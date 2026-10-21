@@ -3,7 +3,13 @@
   "cleanUrls": true,
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api" },
+    { "source": "/sitemap.xml", "destination": "/api" },
+    { "source": "/cursos/:slug", "destination": "/api" },
     { "source": "/((?!api/).*)", "destination": "/app.html" }
+  ],
+  "crons": [
+    { "path": "/api/agenda/recordatorios", "schedule": "0 12 * * *" },
+    { "path": "/api/agenda/reconciliar", "schedule": "30 7 * * *" }
   ],
   "headers": [
     {

@@ -32,11 +32,30 @@ export async function obtenerDisponibilidad(fecha) {
   return data.horarios;
 }
 
-/** Reserva un turno. Devuelve { id, fecha, hora }. */
+/** Reserva un turno. Devuelve { id, fecha, hora }. Si el horario se ocupó recién, el error trae status 409. */
 export async function reservarTurno(datos) {
   if (USE_MOCKS) {
     await esperar(500);
     return { id: `demo-${Date.now()}`, fecha: datos.fecha, hora: datos.hora };
   }
   return api('/turnos', { method: 'POST', body: datos });
+}
+
+// Cancelación con el link del email: { fecha, hora, motivo, estado, pasado }.
+const DEMO_CANCELACION = { fecha: proximosDiasHabiles(2)[1], hora: '10:30', motivo: 'control', estado: 'reservado', pasado: false };
+
+export async function turnoParaCancelar(token) {
+  if (USE_MOCKS) {
+    await esperar(300);
+    return DEMO_CANCELACION;
+  }
+  return api(`/turnos/cancelar?t=${encodeURIComponent(token)}`);
+}
+
+export async function cancelarTurno(token) {
+  if (USE_MOCKS) {
+    await esperar(500);
+    return { ...DEMO_CANCELACION, estado: 'cancelado' };
+  }
+  return api('/turnos/cancelar', { method: 'POST', body: { t: token } });
 }

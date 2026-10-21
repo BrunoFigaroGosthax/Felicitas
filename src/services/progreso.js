@@ -24,6 +24,43 @@ export async function leerProgreso(curso, enCuenta) {
   return data.map((p) => p.clase_id);
 }
 
+// ---- Minuto donde quedó cada video: { [claseId]: segundos } ----
+const clavePosicion = (slug) => `felicitas:posicion:${slug}`;
+
+function posicionesLocales(slug) {
+  try {
+    return JSON.parse(localStorage.getItem(clavePosicion(slug))) || {};
+  } catch {
+    return {};
+  }
+}
+
+export async function leerPosiciones(curso, enCuenta) {
+  if (!enCuenta) return posicionesLocales(curso.slug);
+  const { data, error } = await supabase
+    .from('progreso')
+    .select('clase_id, posicion_segundos')
+    .in('clase_id', curso.clases.map((c) => c.id))
+    .gt('posicion_segundos', 0);
+  if (error) return {};
+  return Object.fromEntries(data.map((p) => [p.clase_id, p.posicion_segundos]));
+}
+
+export async function guardarPosicion(curso, claseId, segundos, enCuenta) {
+  const s = Math.max(0, Math.floor(segundos));
+  if (!enCuenta) {
+    try {
+      localStorage.setItem(clavePosicion(curso.slug), JSON.stringify({ ...posicionesLocales(curso.slug), [claseId]: s }));
+    } catch {
+      /* sin almacenamiento */
+    }
+    return;
+  }
+  const sesion = await obtenerSesion();
+  // Solo la posición: si la clase ya estaba completada, el upsert no la toca.
+  await supabase.from('progreso').upsert({ usuario_id: sesion.usuario.id, clase_id: claseId, posicion_segundos: s }, { onConflict: 'usuario_id,clase_id' });
+}
+
 export async function marcarCompletada(curso, claseId, enCuenta) {
   if (!enCuenta) {
     const vistas = progresoLocal(curso.slug);

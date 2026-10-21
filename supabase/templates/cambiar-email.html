@@ -1,0 +1,21 @@
+<!-- Supabase → Authentication → Emails → Change Email Address. Asunto: "Confirmá tu nuevo email" -->
+<div style="margin:0;padding:24px 12px;background:#fffdf7;font-family:Montserrat,Arial,sans-serif;color:#2f2a3d">
+  <div style="max-width:520px;margin:0 auto;background:#ffffff;border:1px solid #e3dbef;border-radius:28px;overflow:hidden">
+    <div style="background:#fff3b1;padding:24px 32px">
+      <img src="{{ .SiteURL }}/img/logo-principal.png" alt="Felicitas, pediatría con propósito" width="160" style="display:block;height:auto;border:0" />
+    </div>
+    <div style="padding:32px">
+      <h1 style="margin:0 0 12px;font-size:26px;line-height:1.2;color:#2f2a3d">Confirmá tu nuevo email</h1>
+      <p style="margin:0 0 24px;font-size:16px;line-height:1.5">
+        Pediste cambiar el email de tu cuenta de {{ .Email }} a {{ .NewEmail }}. Confirmalo con este botón:
+      </p>
+      <a href="{{ .ConfirmationURL }}" style="display:inline-block;background:#c6b6da;color:#2f2a3d;font-weight:700;font-size:16px;text-decoration:none;padding:14px 28px;border-radius:999px">Confirmar el cambio</a>
+      <p style="margin:24px 0 0;font-size:14px;line-height:1.5;color:#5a5170">
+        Si no pediste este cambio, escribinos respondiendo este email.
+      </p>
+    </div>
+    <div style="padding:16px 32px;background:#90cec9;font-size:13px;line-height:1.5;color:#2f2a3d">
+      Felicitas · Pediatría con propósito
+    </div>
+  </div>
+</div>

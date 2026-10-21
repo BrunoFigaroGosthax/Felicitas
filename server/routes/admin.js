@@ -8,6 +8,7 @@ import { configurado } from '../lib/config.js';
 import { errorPublico, handler, noConfigurado } from '../lib/errores.js';
 import { admin, sinError } from '../lib/supabase.js';
 import { UUID } from '../lib/validar.js';
+import { reconciliarAgenda } from './agenda.js';
 
 const router = Router();
 
@@ -82,6 +83,15 @@ router.get(
       sinError(await admin.from('clases').update({ duracion_segundos: estado.duracionS }).eq('id', clase.id), 'clases');
     }
     res.json(estado);
+  }),
+);
+
+// POST /api/admin/agenda/reconciliar → "Sincronizar ahora" del panel: revisa que cada turno
+// esté "ocupado" en los demás sistemas y reintenta lo pendiente.
+router.post(
+  '/agenda/reconciliar',
+  handler(async (_req, res) => {
+    res.json(await reconciliarAgenda());
   }),
 );
 

@@ -90,13 +90,41 @@ export async function guardarCurso(datos, id) {
   return q(consulta.select().single(), 'No pudimos guardar el curso.');
 }
 
-/** Borra un curso sin ventas, con sus clases, PDF y videos. Con ventas, hay que despublicarlo. */
+/** Borra un curso sin ventas, con sus clases, PDF, videos y portada. Con ventas, hay que despublicarlo. */
 export async function borrarCurso(id) {
   const { count } = await db().from('compras').select('id', { count: 'exact', head: true }).eq('curso_id', id);
   if (count > 0) throw new Error('Este curso tiene ventas: no se puede borrar. Despublicalo para que deje de verse.');
   const curso = await obtenerCursoAdmin(id);
   for (const clase of curso?.clases || []) await limpiarMediosClase(clase);
+  await borrarArchivoPortada(curso?.portada_imagen);
   await q(db().from('cursos').delete().eq('id', id), 'No pudimos borrar el curso.');
+}
+
+// ---------------- Portada (bucket público "portadas") ----------------
+
+const TIPOS_IMAGEN = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+const MAX_PORTADA = 2 * 1024 * 1024;
+
+async function borrarArchivoPortada(url) {
+  const ruta = url?.split('/object/public/portadas/')[1];
+  if (ruta) await db().storage.from('portadas').remove([decodeURIComponent(ruta)]);
+}
+
+export async function subirPortada(curso, archivo) {
+  const ext = TIPOS_IMAGEN[archivo.type];
+  if (!ext) throw new Error('La imagen tiene que ser JPG, PNG o WebP.');
+  if (archivo.size > MAX_PORTADA) throw new Error('La imagen pesa más de 2 MB. Achicala antes de subirla (con 1200 px de ancho alcanza).');
+  const ruta = `${curso.id}-${Date.now()}.${ext}`;
+  const { error } = await db().storage.from('portadas').upload(ruta, archivo, { contentType: archivo.type });
+  if (error) throw new Error(`No pudimos subir la imagen: ${error.message}`);
+  const url = db().storage.from('portadas').getPublicUrl(ruta).data.publicUrl;
+  await q(db().from('cursos').update({ portada_imagen: url }).eq('id', curso.id), 'No pudimos guardar la portada.');
+  await borrarArchivoPortada(curso.portada_imagen);
+}
+
+export async function quitarPortada(curso) {
+  await q(db().from('cursos').update({ portada_imagen: null }).eq('id', curso.id), 'No pudimos quitar la portada.');
+  await borrarArchivoPortada(curso.portada_imagen);
 }
 
 // ---------------- Clases ----------------
@@ -272,6 +300,13 @@ export const borrarCupon = (id) => q(db().from('cupones').delete().eq('id', id),
 
 export const listarTurnos = () =>
   q(db().from('turnos').select('*').order('fecha', { ascending: false }).order('hora', { ascending: false }).limit(500), 'No pudimos cargar los turnos.');
+
+/** "Ocupado" que la web puso en los otros sistemas de turnos, desde hoy. */
+export const listarBloqueos = (desde) =>
+  q(db().from('agenda_bloqueos').select('*').gte('fecha', desde).order('fecha').order('hora'), 'No pudimos cargar la sincronización.');
+
+/** Revisa ya que cada turno esté "ocupado" en los demás sistemas: { creados, liberados, pendientes, errores }. */
+export const sincronizarAgenda = () => api('/admin/agenda/reconciliar', { method: 'POST', body: {} });
 
 export const listarArrepentimientos = () =>
   q(db().from('arrepentimientos').select('*').order('created_at', { ascending: false }), 'No pudimos cargar las solicitudes.');

@@ -16,11 +16,14 @@ import {
   moverClase,
   obtenerCursoAdmin,
   quitarPdf,
+  quitarPortada,
   quitarVideo,
   subirPdf,
+  subirPortada,
   subirVideo,
   verPdf,
 } from '../../services/admin.js';
+import Ondas from '../../components/ui/Ondas.jsx';
 
 const VACIO = {
   titulo: '',
@@ -116,6 +119,53 @@ function FormCurso({ curso, onGuardado }) {
         <Button type="submit" disabled={ocupado}>{ocupado ? 'Guardando…' : nuevo ? 'Crear curso' : 'Guardar cambios'}</Button>
       </div>
     </form>
+  );
+}
+
+// ---------------- Portada ----------------
+
+const FONDOS = { lavanda: 'bg-lavanda', menta: 'bg-menta', amarillo: 'bg-amarillo' };
+
+function Portada({ curso, onCambio }) {
+  const { ocupado, error, accion } = useAccion();
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-sm font-bold">Imagen de portada (opcional)</p>
+      <div className="flex flex-wrap items-center gap-4">
+        <div className={`h-[110px] w-[200px] flex-none overflow-hidden rounded-bloque ${FONDOS[curso.portada_fondo]}`}>
+          {curso.portada_imagen ? (
+            <img src={curso.portada_imagen} alt="Portada actual" className="h-full w-full object-cover" />
+          ) : (
+            <Ondas lineas={curso.portada_ondas?.length ? curso.portada_ondas : [{ trazo: 'a', color: 'menta' }]} />
+          )}
+        </div>
+        <div className="flex flex-col items-start gap-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="inline-flex min-h-11 cursor-pointer items-center rounded-full border-2 border-ink px-4 text-[15px] font-bold focus-within:outline focus-within:outline-2 focus-within:outline-offset-2">
+              {ocupado ? 'Subiendo…' : curso.portada_imagen ? 'Cambiar imagen' : 'Subir imagen'}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="sr-only"
+                disabled={ocupado}
+                onChange={async (e) => {
+                  const archivo = e.target.files?.[0];
+                  e.target.value = '';
+                  if (archivo && (await accion(() => subirPortada(curso, archivo)))) onCambio();
+                }}
+              />
+            </label>
+            {curso.portada_imagen && (
+              <BotonTexto peligro disabled={ocupado} onClick={async () => (await accion(() => quitarPortada(curso))) && onCambio()}>
+                Quitar
+              </BotonTexto>
+            )}
+          </div>
+          <p className="text-sm text-ink-muted">JPG, PNG o WebP, hasta 2 MB. Ideal: 1200 × 630. Sin imagen se usan las ondas del color elegido.</p>
+        </div>
+      </div>
+      {error && <Aviso tono="error">{error}</Aviso>}
+    </div>
   );
 }
 
@@ -388,6 +438,11 @@ export default function AdminCurso() {
             >
               {borrado.error && <Aviso tono="error">{borrado.error}</Aviso>}
               <FormCurso key={curso?.updated_at || 'nuevo'} curso={curso} onGuardado={recargar} />
+              {!nuevo && (
+                <div className="border-t border-borde pt-5">
+                  <Portada curso={curso} onCambio={recargar} />
+                </div>
+              )}
             </Panel>
 
             {!nuevo && (

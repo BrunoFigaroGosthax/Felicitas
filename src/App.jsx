@@ -4,6 +4,7 @@ import Layout from './components/layout/Layout.jsx';
 import RequiereSesion from './components/layout/RequiereSesion.jsx';
 import Acceso from './pages/Acceso.jsx';
 import Arrepentimiento from './pages/Arrepentimiento.jsx';
+import CancelarTurno from './pages/CancelarTurno.jsx';
 import Certificado from './pages/Certificado.jsx';
 import Curso from './pages/Curso.jsx';
 import Cursos from './pages/Cursos.jsx';
@@ -34,6 +35,7 @@ export default function App() {
       <Route element={<Layout />}>
         <Route index element={<Inicio />} />
         <Route path="turnos" element={<Turnos />} />
+        <Route path="turnos/cancelar" element={<CancelarTurno />} />
         <Route path="cursos" element={<Cursos />} />
         <Route path="cursos/:slug" element={<Curso />} />
         <Route path="ingresar" element={<Acceso modo="ingresar" />} />
