@@ -5,7 +5,7 @@
     { "source": "/api/(.*)", "destination": "/api" },
     { "source": "/sitemap.xml", "destination": "/api" },
     { "source": "/cursos/:slug", "destination": "/api" },
-    { "source": "/((?!api/).*)", "destination": "/app.html" }
+    { "source": "/((?!api/).*)", "destination": "/app" }
   ],
   "crons": [
     { "path": "/api/agenda/recordatorios", "schedule": "0 12 * * *" },

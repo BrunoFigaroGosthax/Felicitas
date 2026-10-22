@@ -12,13 +12,22 @@ const router = Router();
 const IMAGEN = '/img/og.png';
 let plantilla = { html: null, hasta: 0 };
 
-/** HTML base de la app (dist/app.html, publicado junto al sitio). Se guarda 10 minutos. */
-async function htmlBase() {
+/** Dirección desde la que llegó el pedido (sirve también en las versiones de prueba de Vercel). */
+const origen = (req) => `${req.get('x-forwarded-proto') || req.protocol}://${req.get('x-forwarded-host') || req.get('host')}`;
+
+/** HTML base de la app (dist/app.html, publicado junto al sitio como /app). Se guarda 10 minutos. */
+async function htmlBase(req) {
   if (plantilla.html && Date.now() < plantilla.hasta) return plantilla.html;
-  const res = await fetch(`${config.siteUrl}/app.html`);
-  if (!res.ok) throw new Error(`No se pudo leer app.html (${res.status})`);
-  plantilla = { html: await res.text(), hasta: Date.now() + 10 * 60_000 };
-  return plantilla.html;
+  // En Vercel la app está en el mismo dominio; en desarrollo, el backend corre aparte (SITE_URL).
+  for (const url of [`${origen(req)}/app`, `${config.siteUrl}/app`]) {
+    const res = await fetch(url).catch(() => null);
+    const html = res?.ok ? await res.text() : '';
+    if (html.includes('id="root"')) {
+      plantilla = { html, hasta: Date.now() + 10 * 60_000 };
+      return html;
+    }
+  }
+  throw new Error('No se pudo leer el HTML de la app');
 }
 
 async function cursosPublicados() {
@@ -31,7 +40,7 @@ async function cursosPublicados() {
 // GET /cursos/:slug (o /api/paginas/curso?slug=…) → HTML de la app con título y vista previa del curso.
 export const paginaCurso = handler(async (req, res) => {
     const slug = String(req.params.slug || req.query.slug || '');
-    const html = await htmlBase();
+    const html = await htmlBase(req);
     const curso = /^[a-z0-9-]{1,80}$/.test(slug) ? (await cursosPublicados()).find((c) => c.slug === slug) : null;
     res.set('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=86400');
     if (!curso) return res.type('html').send(html); // la app muestra "no encontrada"
