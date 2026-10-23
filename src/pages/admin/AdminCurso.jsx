@@ -437,7 +437,8 @@ export default function AdminCurso() {
               }
             >
               {borrado.error && <Aviso tono="error">{borrado.error}</Aviso>}
-              <FormCurso key={curso?.updated_at || 'nuevo'} curso={curso} onGuardado={recargar} />
+              {/* key por curso (no por fecha de modificación): subir la portada no borra lo que se está editando. */}
+              <FormCurso key={curso?.id || 'nuevo'} curso={curso} onGuardado={recargar} />
               {!nuevo && (
                 <div className="border-t border-borde pt-5">
                   <Portada curso={curso} onCambio={recargar} />

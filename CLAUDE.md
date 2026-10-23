@@ -25,7 +25,11 @@ npm test             # pruebas del backend (node:test)
 npm run test:db      # pruebas del esquema de Supabase en Postgres en memoria (PGlite)
 npm run build        # vite build + scripts/prerender.mjs
 npm run check        # todo lo anterior; lo mismo corre en CI (.github/workflows/ci.yml)
+npm run test:e2e     # pruebas en el navegador contra el sitio local (levantar dev y dev:server antes)
+E2E_URL=https://felicitas-sable.vercel.app npm run test:e2e   # … o contra el sitio publicado
 ```
+
+Las pruebas de navegador (`tests/e2e/`) usan el Chrome/Edge instalado y la service role de `server/.env` para crear usuarios temporales (`@example.com`) que borran al terminar. No corren en CI. Antes de abrir el sitio al público: `docs/LANZAMIENTO.md`.
 
 ## Modo demo e integraciones
 
@@ -72,7 +76,7 @@ La doctora toma turnos en DrApp y en otro sistema (pendiente: saber cuál). Regl
 
 ## Panel de administración (`/admin`)
 
-- Acceso: `perfiles.rol = 'admin'`, asignado a mano en Supabase (`update public.perfiles set rol = 'admin' where id in (select id from auth.users where email = '...')`). El encabezado muestra "Panel" a los admin (`useSesion().esAdmin`: true / false / null mientras carga).
+- Acceso: `perfiles.rol = 'admin'`, asignado a mano en Supabase (`update public.perfiles set rol = 'admin' where id in (select id from auth.users where email = '...')`). A los admin el encabezado les muestra solo "Panel" (sin "Mi cuenta"); sus datos, contraseña y cerrar sesión están en Panel → Mis datos (`useSesion().esAdmin`: true / false / null mientras carga). Si entran a Mi cuenta, ven el aviso "Tu cuenta es administradora" y se ocultan cursos y certificados vacíos.
 - Secciones en `src/pages/admin/` (cargadas con `lazy`): cursos y clases (con subida de video y PDF), ventas, alumnos (dar/quitar acceso), cupones, turnos, arrepentimientos, contenido (testimonios y obras sociales). Piezas comunes en `src/components/admin/ui.jsx`.
 - `src/services/admin.js` habla directo con Supabase con la sesión del admin (políticas `es_admin()`, migración `20261018000000_panel_admin.sql`). Solo los videos pasan por el backend (`server/routes/admin.js`), que tiene la API key de Bunny.
 - **PDF**: Supabase Storage, bucket privado `materiales` (solo PDF, 50 MB). El alumno recibe un link firmado del backend (`/api/clases/:id/medio`).

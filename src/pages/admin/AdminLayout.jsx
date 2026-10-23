@@ -13,6 +13,7 @@ const SECCIONES = [
   { to: 'turnos', label: 'Turnos' },
   { to: 'arrepentimientos', label: 'Arrepentimientos' },
   { to: 'contenido', label: 'Contenido' },
+  { to: 'cuenta', label: 'Mis datos' },
 ];
 
 export default function AdminLayout() {

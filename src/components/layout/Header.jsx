@@ -14,7 +14,8 @@ export default function Header() {
   const [abierto, setAbierto] = useState(false);
   const location = useLocation();
   const { usuario, esAdmin } = useSesion();
-  const cuenta = usuario ? { to: '/mi-cuenta', label: 'Mi cuenta' } : { to: '/ingresar', label: 'Ingresar' };
+  // Los administradores entran solo por "Panel" (sus datos están en Panel → Mis datos).
+  const cuenta = esAdmin ? null : usuario ? { to: '/mi-cuenta', label: 'Mi cuenta' } : { to: '/ingresar', label: 'Ingresar' };
 
   // Cerrar el menú móvil al navegar.
   useEffect(() => setAbierto(false), [location]);
@@ -49,9 +50,11 @@ export default function Header() {
               Panel
             </NavLink>
           )}
-          <NavLink to={cuenta.to} className={linkClass(cuenta.to)} end>
-            {cuenta.label}
-          </NavLink>
+          {cuenta && (
+            <NavLink to={cuenta.to} className={linkClass(cuenta.to)} end>
+              {cuenta.label}
+            </NavLink>
+          )}
           <ButtonLink to="/turnos" size="sm">
             Pedir turno
           </ButtonLink>
@@ -84,9 +87,11 @@ export default function Header() {
                 Panel
               </NavLink>
             )}
-            <NavLink to={cuenta.to} className={linkClass(cuenta.to)} end>
-              {cuenta.label}
-            </NavLink>
+            {cuenta && (
+              <NavLink to={cuenta.to} className={linkClass(cuenta.to)} end>
+                {cuenta.label}
+              </NavLink>
+            )}
             <ButtonLink to="/turnos" className="mt-3 w-full">
               Pedir turno
             </ButtonLink>

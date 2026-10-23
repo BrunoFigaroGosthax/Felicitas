@@ -269,6 +269,10 @@ await espera('admin ve bloqueos', () => como('authenticated', ADM, 'select * fro
 await espera('bucket portadas público y solo imágenes', () => db.query(`select * from storage.buckets where id = 'portadas'`), (r) => r.rows[0]?.public === true && r.rows[0].allowed_mime_types.includes('image/webp'));
 await espera('admin sube portada', () => como('authenticated', ADM, `insert into storage.objects (bucket_id, name) values ('portadas', 'a.jpg')`), (r, e) => !e);
 await espera('alumno NO sube portada', () => como('authenticated', E, `insert into storage.objects (bucket_id, name) values ('portadas', 'b.jpg')`), (r, e) => !!e);
+// ---------------- Migración 6: el resumen no cuenta las compras de demostración ----------------
+const cursoDemo = await id(`select id from cursos where slug = 'primeros-meses'`);
+await db.query(`insert into compras (usuario_id, curso_id, monto, estado, proveedor) values ('${E}', '${cursoDemo}', 15000, 'aprobada', 'demo')`);
+await espera('resumen de ventas: no cuenta las de demostración', () => como('authenticated', ADM, `select * from admin_resumen_ventas() where curso_id = '${cursoDemo}'`), (r) => r?.rows.length === 0);
 await espera('curso con ventas no se borra', () => como('authenticated', ADM, `delete from cursos where slug = 'adolescencia-estar-cerca'`), (r, e) => !!e);
 await espera('admin borra curso sin ventas', () => como('authenticated', ADM, `delete from cursos where id = '${cursoAdm}' returning id`), (r) => r?.rows.length === 1);
 

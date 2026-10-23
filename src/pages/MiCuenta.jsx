@@ -20,23 +20,30 @@ function Seccion({ titulo, children }) {
   );
 }
 
-function MisCursos() {
+/** ocultarSiVacio: para administradores, que casi nunca tienen cursos propios. */
+function MisCursos({ ocultarSiVacio }) {
   const [lista, setLista] = useState(null);
   const [error, setError] = useState('');
   useEffect(() => {
     misCursos().then(setLista).catch((e) => setError(e.message));
   }, []);
 
-  if (error) return <Aviso tono="error">{error}</Aviso>;
-  if (!lista) return <p className="text-ink-muted">Cargando tus cursos…</p>;
-  if (!lista.length) {
-    return (
+  if (ocultarSiVacio && (!lista || !lista.length)) return null;
+  let contenido;
+  if (error) contenido = <Aviso tono="error">{error}</Aviso>;
+  else if (!lista) contenido = <p className="text-ink-muted">Cargando tus cursos…</p>;
+  else if (!lista.length) {
+    contenido = (
       <div className="flex flex-col items-start gap-3">
         <p>Todavía no empezaste ningún curso.</p>
         <ButtonLink to="/cursos" variante="menta" size="sm">Ver cursos</ButtonLink>
       </div>
     );
   }
+  return <Seccion titulo="Mis cursos">{contenido ?? <ListaCursos lista={lista} />}</Seccion>;
+}
+
+function ListaCursos({ lista }) {
   return (
     <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,260px),1fr))] gap-4">
       {lista.map(({ curso, completadas, total }) => {
@@ -65,13 +72,19 @@ function MisCursos() {
   );
 }
 
-function MisCertificados() {
+function MisCertificados({ ocultarSiVacio }) {
   const [lista, setLista] = useState(null);
   useEffect(() => {
     misCertificados().then(setLista).catch(() => setLista([]));
   }, []);
-  if (!lista) return <p className="text-ink-muted">Cargando…</p>;
-  if (!lista.length) return <p className="text-ink-muted">Cuando termines un curso que otorga certificado, lo vas a encontrar acá.</p>;
+  if (ocultarSiVacio && (!lista || !lista.length)) return null;
+  let contenido;
+  if (!lista) contenido = <p className="text-ink-muted">Cargando…</p>;
+  else if (!lista.length) contenido = <p className="text-ink-muted">Cuando termines un curso que otorga certificado, lo vas a encontrar acá.</p>;
+  return <Seccion titulo="Mis certificados">{contenido ?? <ListaCertificados lista={lista} />}</Seccion>;
+}
+
+function ListaCertificados({ lista }) {
   return (
     <ul className="flex flex-col gap-2">
       {lista.map((c) => (
@@ -93,7 +106,8 @@ function MisCertificados() {
   );
 }
 
-function MisDatos({ email }) {
+/** Nombre, teléfono y cambio de contraseña. También lo usa el panel (Admin → Mis datos). */
+export function MisDatos({ email }) {
   const [datos, setDatos] = useState(null);
   const [guardando, setGuardando] = useState(false);
   const [estado, setEstado] = useState({ tono: '', texto: '' });
@@ -137,7 +151,7 @@ function MisDatos({ email }) {
 
 export default function MiCuenta() {
   useTitulo('Mi cuenta');
-  const { usuario } = useSesion();
+  const { usuario, esAdmin } = useSesion();
   const { state } = useLocation();
   const navigate = useNavigate();
 
@@ -156,8 +170,17 @@ export default function MiCuenta() {
         <Button variante="secundario" size="sm" onClick={cerrarSesion}>Cerrar sesión</Button>
       </div>
       {state?.aviso && <Aviso tono="ok">{state.aviso}</Aviso>}
-      <Seccion titulo="Mis cursos"><MisCursos /></Seccion>
-      <Seccion titulo="Mis certificados"><MisCertificados /></Seccion>
+      {esAdmin && (
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-card bg-lavanda p-5 sm:p-7">
+          <div className="flex flex-col gap-1">
+            <p className="font-display text-[22px] font-semibold leading-tight">Tu cuenta es administradora</p>
+            <p className="text-[15px]">Cursos, ventas, alumnos, turnos y contenido se gestionan desde el panel.</p>
+          </div>
+          <ButtonLink to="/admin" variante="amarillo">Ir al panel</ButtonLink>
+        </div>
+      )}
+      <MisCursos ocultarSiVacio={esAdmin} />
+      <MisCertificados ocultarSiVacio={esAdmin} />
       <Seccion titulo="Mis datos"><MisDatos email={usuario.email} /></Seccion>
     </div>
   );

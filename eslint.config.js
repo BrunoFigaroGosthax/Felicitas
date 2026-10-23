@@ -22,6 +22,11 @@ export default [
     languageOptions: { globals: globals.node },
   },
   {
+    // Pruebas de navegador: código de Node que también corre dentro de la página (page.evaluate).
+    files: ['tests/**/*.mjs'],
+    languageOptions: { globals: { ...globals.node, ...globals.browser } },
+  },
+  {
     rules: {
       'no-unused-vars': ['error', { argsIgnorePattern: '^_', caughtErrors: 'none', ignoreRestSiblings: true }],
     },
