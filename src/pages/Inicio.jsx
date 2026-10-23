@@ -75,11 +75,14 @@ export default function Inicio() {
         />
         <div className="flex min-w-0 flex-[1.3_1_400px] flex-col gap-4">
           <Encabezado eyebrow="Sobre mí" titulo="Te invito a conocerme" />
+          {/* Texto genérico de demostración: reemplazar por la presentación real (formación, experiencia, dónde atiende). */}
           <p className="text-lg leading-relaxed">
-            [Presentación en primera persona: formación, dónde atiende, años de experiencia y por qué eligió la pediatría.]
+            Soy pediatra y acompaño a las familias desde los primeros días del bebé hasta la adolescencia. En cada consulta me tomo el
+            tiempo para escucharte, revisar con calma y explicarte cada paso con palabras claras.
           </p>
           <p className="leading-relaxed text-ink-muted">
-            [Segundo párrafo: cómo trabaja con las familias, su mirada sobre el acompañamiento y la prevención.]
+            Creo en una pediatría cercana y preventiva: que sepas qué esperar en cada etapa, cuándo consultar y cómo cuidar a tu hijo en
+            casa. Por eso, además de la consulta, preparo cursos y guías para acompañarte entre visita y visita.
           </p>
           <dl className="mt-2 grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-4">
             {[

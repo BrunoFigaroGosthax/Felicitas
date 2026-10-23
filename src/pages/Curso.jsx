@@ -345,9 +345,7 @@ export default function Curso() {
               Clase {actual + 1} de {curso.clases.length}
             </p>
             <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1]">{clase.titulo}</h1>
-            <p className="max-w-[680px] text-[17px]">
-              {clase.descripcion || '[Descripción breve de la clase: qué se ve y para qué edades sirve.]'}
-            </p>
+            {clase.descripcion && <p className="max-w-[680px] text-[17px]">{clase.descripcion}</p>}
           </div>
 
           {habilitada && (

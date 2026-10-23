@@ -4,6 +4,9 @@ const env = process.env;
 
 export const config = {
   siteUrl: (env.SITE_URL || 'http://localhost:5173').replace(/\/$/, ''),
+  // Pagos de demostración (sin Mercado Pago): una pantalla propia que aprueba o rechaza sin cobrar.
+  // Solo para mostrar el sitio. Si Mercado Pago está configurado, se usa Mercado Pago.
+  pagosDemo: env.PAGOS_DEMO === 'true',
   supabase: {
     url: env.SUPABASE_URL,
     anonKey: env.SUPABASE_ANON_KEY,

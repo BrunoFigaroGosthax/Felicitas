@@ -122,6 +122,23 @@ export async function comprar(curso, codigo) {
   return api('/compras', { method: 'POST', body: { cursoId: curso.id, codigo } });
 }
 
+// ---- Pago de demostración (PAGOS_DEMO=true en el servidor, sin Mercado Pago) ----
+
+/** { id, monto, precio_lista, descuento, estado, cursos: { titulo, slug } } de una compra propia. */
+export async function obtenerCompraDemo(id) {
+  if (!supabase) throw new Error('El pago de demostración necesita Supabase conectado.');
+  const { data, error } = await supabase
+    .from('compras')
+    .select('id, monto, precio_lista, descuento, estado, proveedor, cursos (titulo, slug)')
+    .eq('id', id)
+    .maybeSingle();
+  if (error || !data || data.proveedor !== 'demo') throw new Error('No encontramos la compra.');
+  return data;
+}
+
+/** Simula el resultado del pago: { estado, curso }. */
+export const resolverPagoDemo = (id, aprobado) => api(`/compras/${id}/demo`, { method: 'POST', body: { aprobado } });
+
 /** Cursos comprados o empezados: [{ curso, completadas, total }]. */
 export async function misCursos() {
   const cursos = await listarCursos();

@@ -47,7 +47,7 @@ npm run check        # todo lo anterior; lo mismo corre en CI (.github/workflows
 - `server/lib/`: `supabase`, `auth` (JWT de Supabase), `mercadopago`, `bunny`, `email` + `plantillas`, `drapp` (**pendiente**), `limite` (rate limit por IP), `validar`.
 - `scripts/prerender.mjs`: HTML de las páginas públicas fijas con título y Open Graph, `app.html` (fallback de la SPA) y `robots.txt`. Necesita `SITE_URL` al hacer build. Las páginas de cada curso y el `sitemap.xml` se arman en el momento con la base (`server/routes/paginas.js`, reescritos en `vercel.json`): un curso cargado desde el panel no necesita volver a publicar. Meta compartida en `server/lib/meta.js`. Imagen para compartir: `public/img/og.png`.
 - Video: el reproductor de Bunny se controla con Player.js (`src/lib/reproductor.js`): guarda el minuto (`progreso.posicion_segundos`), retoma y marca la clase como vista al terminar. Probado con un reproductor simulado; verificar con Bunny real.
-- `supabase/templates/`: emails de Supabase Auth en español (pegarlos en Authentication → Emails).
+- `supabase/templates/`: emails de Supabase Auth en español. En el plan gratuito, Supabase solo deja editar las plantillas con SMTP propio: se pegan cuando haya dominio verificado en Resend y SMTP configurado (Authentication → Emails → SMTP Settings). Mientras tanto, para la demo, "Confirm email" desactivado.
 - `vercel.json`: rewrites (`/api` → función; resto → `app.html`), `cleanUrls`, CSP y encabezados de seguridad. Si se agrega un dominio externo (analítica, etc.), sumarlo a la CSP.
 
 ## Agenda con varios sistemas de turnos (`server/lib/agenda/`)
@@ -62,6 +62,13 @@ La doctora toma turnos en DrApp y en otro sistema (pendiente: saber cuál). Regl
 - Webhooks: `POST /api/agenda/avisos/:sistema`. Revisión periódica: `GET /api/agenda/reconciliar` (cron diario de Vercel + workflow `.github/workflows/agenda.yml` cada 15 min, inactivo hasta configurar `SITE_URL` y `CRON_SECRET` en GitHub) y botón "Sincronizar ahora" en el panel.
 - Recordatorios por email el día anterior (`/api/agenda/recordatorios`, cron diario). Cancelación por el paciente con link firmado (`/turnos/cancelar?t=…`, `server/lib/tokens.js`).
 - No se le manda a la doctora un email por cada turno: sería un sistema más recibiendo datos de pacientes (los sistemas de turnos ya le avisan).
+
+## Modo demostración (para mostrar el sitio antes de tener todas las cuentas)
+
+- `PAGOS_DEMO=true` (servidor): sin Mercado Pago, la compra va a `/pago/demo`, que aprueba o rechaza sin cobrar. Recorre el flujo real (crear_compra, cupón, acceso por trigger) con `compras.proveedor = 'demo'`; el panel las marca "Demo" y no las suma a los totales. Si Mercado Pago está configurado, tiene prioridad.
+- Contenido de demo cargado en la base: descripciones de clases y precios (18000, 15000, 12000). Reemplazar desde el panel.
+- Para borrar las compras de demostración (y los accesos que dieron) al salir a producción:
+  `delete from public.accesos where compra_id in (select id from public.compras where proveedor = 'demo'); delete from public.compras where proveedor = 'demo';`
 
 ## Panel de administración (`/admin`)
 
@@ -90,7 +97,8 @@ La doctora toma turnos en DrApp y en otro sistema (pendiente: saber cuál). Regl
 - Mobile first: layouts con `flex-wrap` / `grid auto-fit`, títulos con `clamp()`. Probar siempre a 390px. El menú completo del encabezado aparece desde `lg`.
 - Las ondas (`<Ondas>`) son decoración: nunca detrás de texto corrido.
 - Voz: cálida, clara, trato con "te"/voseo rioplatense ("pedí", "elegí"). Sin emojis en la web. Sin tecnicismos.
-- No inventar datos de la doctora ni datos legales: lo que falta va entre corchetes `[ASÍ]` hasta tener el dato real.
+- No inventar datos de la doctora ni datos legales (matrícula, dirección, horarios, formación, años de experiencia, obras sociales, contacto): van entre corchetes `[ASÍ]` hasta tener el dato real. Sí se permiten textos genéricos de demostración que no afirman nada concreto sobre ella ("Sobre mí", descripciones de clases), marcados en el código para reemplazar.
+- Nunca inventar testimonios (serían reseñas falsas): los de ejemplo quedan sin publicar.
 
 ## Pendientes
 

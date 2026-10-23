@@ -102,6 +102,7 @@ test('compras, clases y webhooks sin integraciones: 503 con mensaje claro', asyn
   assert.equal((await pedir('/clases/00000000-0000-0000-0000-000000000000/medio')).status, 503);
   assert.equal((await pedir('/webhooks/mercadopago?type=payment&data.id=1', { method: 'POST', body: {} })).status, 503);
   assert.equal((await pedir('/admin/videos', { method: 'POST', body: {} })).status, 503);
+  assert.equal((await pedir('/compras/00000000-0000-0000-0000-000000000000/demo', { method: 'POST', body: { aprobado: true } })).status, 503);
 });
 
 test('cancelación con link: token inválido o sin base → error claro', async () => {

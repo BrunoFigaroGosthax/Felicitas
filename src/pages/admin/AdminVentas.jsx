@@ -31,7 +31,8 @@ export default function AdminVentas() {
   const { datos, error, cargando } = useCarga(cargar);
   const [filtro, setFiltro] = useState('aprobada');
   const compras = datos || [];
-  const aprobadas = compras.filter((c) => c.estado === 'aprobada');
+  const aprobadas = compras.filter((c) => c.estado === 'aprobada' && c.proveedor !== 'demo');
+  const demos = compras.filter((c) => c.proveedor === 'demo').length;
   const visibles = filtro === 'todas' ? compras : compras.filter((c) => c.estado === filtro);
 
   return (
@@ -40,8 +41,13 @@ export default function AdminVentas() {
         <div className="flex flex-wrap gap-3">
           <Dato titulo="Recaudado" valor={pesos(aprobadas.reduce((s, c) => s + Number(c.monto), 0))} />
           <Dato titulo="Ventas aprobadas" valor={aprobadas.length} />
-          <Dato titulo="Pagos pendientes" valor={compras.filter((c) => c.estado === 'pendiente').length} />
+          <Dato titulo="Pagos pendientes" valor={compras.filter((c) => c.estado === 'pendiente' && c.proveedor !== 'demo').length} />
         </div>
+        {demos > 0 && (
+          <p className="text-sm text-ink-muted">
+            Hay {demos} {demos === 1 ? 'compra' : 'compras'} de demostración (marcadas "Demo"): no cuentan en los totales.
+          </p>
+        )}
         <Field label="Mostrar" as="select" value={filtro} onChange={(e) => setFiltro(e.target.value)} className="max-w-[260px]">
           <option value="aprobada">Aprobadas</option>
           <option value="pendiente">Pendientes</option>
@@ -68,7 +74,15 @@ export default function AdminVentas() {
             },
             { titulo: 'Cupón', render: (c) => c.cupones?.codigo || '—' },
             { titulo: 'Estado', render: (c) => <Etiqueta tono={ESTADOS[c.estado]?.[1]}>{ESTADOS[c.estado]?.[0] || c.estado}</Etiqueta> },
-            { titulo: 'Pago', render: (c) => <span className="text-sm text-ink-muted">{c.proveedor === 'sin_cargo' ? 'Sin cargo' : c.pago_id ? `MP ${c.pago_id}` : '—'}</span> },
+            {
+              titulo: 'Pago',
+              render: (c) =>
+                c.proveedor === 'demo' ? (
+                  <Etiqueta tono="info">Demo</Etiqueta>
+                ) : (
+                  <span className="text-sm text-ink-muted">{c.proveedor === 'sin_cargo' ? 'Sin cargo' : c.pago_id ? `MP ${c.pago_id}` : '—'}</span>
+                ),
+            },
           ]}
         />
         <p className="text-sm text-ink-muted">

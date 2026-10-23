@@ -12,6 +12,7 @@ import Inicio from './pages/Inicio.jsx';
 import MiCuenta from './pages/MiCuenta.jsx';
 import NoEncontrada from './pages/NoEncontrada.jsx';
 import NuevaClave from './pages/NuevaClave.jsx';
+import PagoDemo from './pages/PagoDemo.jsx';
 import PagoResultado from './pages/PagoResultado.jsx';
 import Privacidad from './pages/Privacidad.jsx';
 import Recuperar from './pages/Recuperar.jsx';
@@ -44,6 +45,7 @@ export default function App() {
         <Route path="nueva-clave" element={<NuevaClave />} />
         <Route path="mi-cuenta" element={<RequiereSesion><MiCuenta /></RequiereSesion>} />
         <Route path="pago/resultado" element={<PagoResultado />} />
+        <Route path="pago/demo" element={<PagoDemo />} />
         <Route path="certificados" element={<Certificado />} />
         <Route path="certificados/:codigo" element={<Certificado />} />
         <Route path="privacidad" element={<Privacidad />} />
