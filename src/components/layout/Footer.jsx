@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { CONTACTO } from '../../data/contenido.js';
+import { CONTACTO, SEDES } from '../../data/contenido.js';
 
 export default function Footer() {
   return (
@@ -15,14 +15,22 @@ export default function Footer() {
             className="h-auto w-56 max-w-full"
           />
         </div>
-        <div className="flex flex-col gap-2">
-          <h2 className="font-body text-base font-bold">Consultorio</h2>
-          <p>{CONTACTO.direccion}</p>
-          <p>{CONTACTO.horarios}</p>
+        <div className="flex flex-col gap-3">
+          <h2 className="font-body text-base font-bold">Dónde atiendo</h2>
+          {SEDES.map((s) => (
+            <div key={s.id}>
+              <p className="font-semibold">{s.nombre}</p>
+              <a className="underline" href={s.mapa} target="_blank" rel="noopener noreferrer">{s.direccion}</a>
+              {s.horarios.map((h) => (
+                <p key={h} className="text-sm">{h}</p>
+              ))}
+            </div>
+          ))}
         </div>
         <div className="flex flex-col gap-2">
           <h2 className="font-body text-base font-bold">Contacto</h2>
-          <a className="underline" href={CONTACTO.whatsappUrl}>WhatsApp</a>
+          <p className="text-sm">{CONTACTO.nombre} · {CONTACTO.matricula}</p>
+          <a className="underline" href={CONTACTO.whatsappUrl}>WhatsApp {CONTACTO.whatsapp}</a>
           <a className="underline" href={CONTACTO.instagramUrl}>{CONTACTO.instagram}</a>
           <a className="underline" href={`mailto:${CONTACTO.email}`}>{CONTACTO.email}</a>
         </div>

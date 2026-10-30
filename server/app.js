@@ -1,5 +1,7 @@
 // App de Express. En local la levanta server/index.js; en Vercel, api/index.js (función serverless).
 import express from 'express';
+import { handler } from './lib/errores.js';
+import { resenasGoogle } from './lib/google.js';
 import adminRutas from './routes/admin.js';
 import agenda from './routes/agenda.js';
 import arrepentimiento from './routes/arrepentimiento.js';
@@ -16,6 +18,16 @@ app.set('trust proxy', 1);
 app.use(express.json({ limit: '100kb', verify: (req, _res, buf) => (req.rawBody = buf) }));
 
 app.get('/api/salud', (_req, res) => res.json({ ok: true }));
+
+// GET /api/resenas → reseñas de Google del consultorio ({ disponible: false } sin GOOGLE_MAPS_API_KEY).
+app.get(
+  '/api/resenas',
+  handler(async (_req, res) => {
+    const datos = await resenasGoogle();
+    res.set('Cache-Control', datos.disponible ? 'public, s-maxage=3600, stale-while-revalidate=86400' : 'public, s-maxage=300');
+    res.json(datos);
+  }),
+);
 app.use('/api/turnos', turnos);
 app.use('/api/agenda', agenda);
 app.use('/api/compras', compras);

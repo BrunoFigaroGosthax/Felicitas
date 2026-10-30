@@ -92,6 +92,32 @@ test('Meta de páginas: escapa y reemplaza título y descripción', async () => 
   assert.doesNotMatch(html, /<tos>/);
 });
 
+test('Reseñas de Google: adapta la respuesta y descarta las que no tienen texto', async () => {
+  const { adaptar } = await import('./google.js');
+  const r = adaptar(
+    {
+      rating: 4.9,
+      userRatingCount: 37,
+      googleMapsUri: 'https://maps.google.com/?cid=1',
+      reviews: [
+        { rating: 5, text: { text: ' Excelente pediatra. ' }, relativePublishTimeDescription: 'hace 2 semanas', authorAttribution: { displayName: 'Laura P.', uri: 'https://g.co/u/1', photoUri: 'https://lh3/x' } },
+        { rating: 4, originalText: { text: 'Muy atenta.' }, authorAttribution: { displayName: 'Martín' } },
+        { rating: 5, text: { text: '' }, authorAttribution: { displayName: 'Sin texto' } },
+      ],
+    },
+    'ChIJabc',
+  );
+  assert.equal(r.disponible, true);
+  assert.equal(r.puntaje, 4.9);
+  assert.equal(r.total, 37);
+  assert.equal(r.verTodas, 'https://maps.google.com/?cid=1');
+  assert.equal(r.escribir, 'https://search.google.com/local/writereview?placeid=ChIJabc');
+  assert.equal(r.resenas.length, 2);
+  assert.deepEqual(r.resenas[0], { autor: 'Laura P.', autorUrl: 'https://g.co/u/1', estrellas: 5, texto: 'Excelente pediatra.', cuando: 'hace 2 semanas', url: null });
+  assert.equal(r.resenas[1].texto, 'Muy atenta.');
+  assert.equal('foto' in r.resenas[0], false, 'no se usan las fotos de los autores');
+});
+
 test('Validaciones', () => {
   assert.equal(esEmail('ana@correo.com'), true);
   assert.equal(esEmail('ana@correo'), false);

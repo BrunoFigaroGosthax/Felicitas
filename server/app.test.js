@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
 
 for (const k of Object.keys(process.env)) {
-  if (/^(SUPABASE|MP|BUNNY|RESEND|DRAPP)_/.test(k)) delete process.env[k];
+  if (/^(SUPABASE|MP|BUNNY|RESEND|DRAPP|GOOGLE)_/.test(k)) delete process.env[k];
 }
 console.info = () => {}; // silenciar los emails simulados
 
@@ -49,6 +49,12 @@ const turno = {
 
 test('salud', async () => {
   assert.deepEqual((await pedir('/salud')).data, { ok: true });
+});
+
+test('reseñas de Google sin clave → no disponibles (la página usa los testimonios)', async () => {
+  const r = await pedir('/resenas');
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.data, { disponible: false });
 });
 
 test('disponibilidad: fecha válida y futura', async () => {

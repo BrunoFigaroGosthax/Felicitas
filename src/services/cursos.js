@@ -59,21 +59,32 @@ const DEMO_COMPRAS = 'felicitas:demo-compras';
 const DEMO_CERTIFICADOS = 'felicitas:demo-certificados';
 const demo = (c, comprados) => ({ ...c, id: c.slug, comprado: comprados.has(c.slug) });
 
-/** IDs de los cursos pagos a los que el usuario tiene acceso. */
+const TODOS = { has: () => true };
+
+/**
+ * Cursos pagos a los que el usuario tiene acceso (algo con .has(id)). Los administradores ven todos.
+ * Siempre se filtra por el usuario: a un admin las políticas le dejan leer los accesos de todos.
+ */
 async function cursosComprados() {
   const sesion = await obtenerSesion();
   if (!sesion) return new Set();
   if (!supabase) return new Set(leerDemo(DEMO_COMPRAS));
-  const { data, error } = await supabase.from('accesos').select('curso_id, vence_at').is('revocado_at', null);
+  const uid = sesion.usuario.id;
+  const [{ data: perfil }, { data, error }] = await Promise.all([
+    supabase.from('perfiles').select('rol').eq('id', uid).maybeSingle(),
+    supabase.from('accesos').select('curso_id, vence_at').eq('usuario_id', uid).is('revocado_at', null),
+  ]);
+  if (perfil?.rol === 'admin') return TODOS;
   if (error) return new Set();
   const ahora = new Date();
   return new Set(data.filter((a) => !a.vence_at || new Date(a.vence_at) > ahora).map((a) => a.curso_id));
 }
 
+/** Catálogo: solo cursos publicados (a un admin las políticas le dejan ver también los borradores). */
 export async function listarCursos() {
   const comprados = await cursosComprados();
   if (!supabase) return CURSOS.map((c) => demo(c, comprados));
-  const { data, error } = await supabase.from('cursos').select(CAMPOS).order('orden');
+  const { data, error } = await supabase.from('cursos').select(CAMPOS).eq('publicado', true).order('orden');
   if (error) throw new Error('No pudimos cargar los cursos. Probá de nuevo.');
   return data.map((c) => desdeDb(c, comprados));
 }
@@ -147,11 +158,17 @@ export async function misCursos() {
       .map((curso) => ({ curso, completadas: progresoLocal(curso.slug).length, total: curso.clases.length }))
       .filter((x) => x.curso.comprado || x.completadas > 0);
   }
-  const { data, error } = await supabase.from('progreso_por_curso').select('curso_id, completadas, ultima_actividad');
+  const uid = (await obtenerSesion())?.usuario.id;
+  const [{ data, error }, { data: accesos }] = await Promise.all([
+    supabase.from('progreso_por_curso').select('curso_id, completadas, ultima_actividad'),
+    // Sus accesos reales (para un admin, "comprado" vale para todos los cursos).
+    supabase.from('accesos').select('curso_id').eq('usuario_id', uid).is('revocado_at', null),
+  ]);
   if (error) throw new Error('No pudimos cargar tus cursos.');
   const porCurso = new Map(data.map((p) => [p.curso_id, p]));
+  const propios = new Set((accesos || []).map((a) => a.curso_id));
   return cursos
-    .filter((c) => c.comprado || porCurso.get(c.id)?.ultima_actividad)
+    .filter((c) => propios.has(c.id) || porCurso.get(c.id)?.ultima_actividad)
     .map((curso) => ({ curso, completadas: porCurso.get(curso.id)?.completadas ?? 0, total: curso.clases.length }));
 }
 
@@ -186,9 +203,12 @@ export async function emitirCertificado(curso) {
 
 export async function misCertificados() {
   if (!supabase) return leerDemo(DEMO_CERTIFICADOS);
+  const uid = (await obtenerSesion())?.usuario.id;
+  // Filtro explícito: a un admin las políticas le dejan leer los certificados de todos.
   const { data, error } = await supabase
     .from('certificados')
     .select('codigo, nombre_alumno, curso_titulo, emitido_at')
+    .eq('usuario_id', uid)
     .order('emitido_at', { ascending: false });
   if (error) throw new Error('No pudimos cargar tus certificados.');
   return data;

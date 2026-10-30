@@ -1,14 +1,18 @@
 // Turnos: reservar (con DrApp de ejemplo) y cancelar con el link del email.
 // El link se firma con la clave del servidor: la parte de cancelación solo corre en local
 // (o si E2E_TOKEN_SECRET tiene el mismo TOKEN_SECRET que el servidor probado).
+import { createHash, createHmac } from 'node:crypto';
 import { join } from 'node:path';
 import { abrir, API, CAPTURAS, LOCAL, pedir as pedirApi, resultados, supabaseAdmin } from './comun.mjs';
 
 export default async function turnos() {
   const r = resultados('Turnos: reservar y cancelar con el link');
   const db = supabaseAdmin();
-  if (process.env.E2E_TOKEN_SECRET) process.env.TOKEN_SECRET = process.env.E2E_TOKEN_SECRET;
-  const { tokenTurno } = await import('../../server/lib/tokens.js');
+  // Misma firma que server/lib/tokens.js. Se calcula acá en vez de importar ese archivo: en local, leerlo
+  // hace que `node --watch` reinicie el backend en medio de la prueba.
+  const env = process.env;
+  const clave = env.E2E_TOKEN_SECRET || env.TOKEN_SECRET || createHash('sha256').update(`turnos:${env.SUPABASE_SERVICE_ROLE_KEY}`).digest('hex');
+  const tokenTurno = (id) => `${id}.${createHmac('sha256', clave).update(`turno:${id}`).digest('base64url')}`;
 
   const dias = [];
   for (let d = new Date(Date.now() + 864e5); dias.length < 3; d = new Date(d.getTime() + 864e5)) if (d.getDay() % 6) dias.push(d.toISOString().slice(0, 10));
@@ -17,7 +21,8 @@ export default async function turnos() {
   const hora = horarios.find((h) => h.disponible).hora;
   const ocupada = horarios.find((h) => !h.disponible)?.hora;
   const datos = { paciente: 'Prueba', nacimiento: '2020-01-01', responsable: `Prueba E2E ${Date.now()}`, telefono: '11 1111 1111', email: 'prueba@example.com', obraSocial: 'Particular', motivo: 'control', fecha, consentimiento: '2026-10' };
-  const pedir = (h) => pedirApi(`${API}/api/turnos`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...datos, hora: h }) });
+  // Sin reintentos: reintentar una reserva podría duplicarla.
+  const pedir = (h) => pedirApi(`${API}/api/turnos`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...datos, hora: h }) }, 1);
 
   let turnoId;
   const { browser, page, errores, ir, texto, esperar } = await abrir();

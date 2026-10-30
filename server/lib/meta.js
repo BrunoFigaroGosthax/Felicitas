@@ -24,7 +24,7 @@ export function conMeta(html, { titulo, descripcion, url, imagen }) {
 
 /** Páginas públicas fijas: [ruta, título, descripción, prioridad en el sitemap]. */
 export const PAGINAS_FIJAS = [
-  ['/', 'Felicitas · Pediatría con propósito', 'Dra. Felicitas Pino, pediatra. Turnos online y cursos para familias.', '1.0'],
+  ['/', 'Felicitas · Pediatría con propósito', 'Dra. Felicitas Pino Meneses, médica pediatra en Neuquén. Turnos online y cursos para familias.', '1.0'],
   ['/turnos', 'Pedí tu turno · Felicitas', 'Elegí día y horario para la consulta pediátrica. Te llega la confirmación por email.', '0.9'],
   ['/cursos', 'Cursos · Felicitas', 'Guías en PDF y clases en video para el día a día con tus hijos. Algunas son gratuitas.', '0.9'],
   ['/arrepentimiento', 'Botón de arrepentimiento · Felicitas', 'Revocá una compra dentro de los 10 días corridos.', '0.3'],

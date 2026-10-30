@@ -50,10 +50,20 @@ insert into public.cupones (codigo, descripcion, tipo, valor) values
   ('PRUEBA10', 'Desarrollo: 10 % en cualquier curso', 'porcentaje', 10),
   ('PRUEBA100', 'Desarrollo: curso sin cargo', 'porcentaje', 100);
 
--- Placeholders hasta tener los datos reales (no inventar).
-insert into public.obras_sociales (nombre, orden) values
-  ('[Obra social 1]', 1),
-  ('[Obra social 2]', 2);
+-- Obras sociales de CIEV (las mismas que src/data/contenido.js). OSDE, SMG y Galeno: próximamente.
+insert into public.obras_sociales (nombre, orden, activa)
+select nombre, orden, true
+from unnest(array[
+  'ISSN', 'Avalian', 'OMINT', 'Doctored', 'Gerdanna', 'Gilsa SRL (Integral Salud)', 'ITER Medicina S.A.', 'Jerárquicos Salud',
+  'Medicus', 'Medifé', 'Mutual Federada', 'Nativus', 'OS Pasteleros', 'OSAPM', 'OSDIPP', 'OSPATLyF', 'OSMATA', 'OSP Bancarios',
+  'OSP Ceramistas', 'OSPATCA', 'OSPEPRI', 'OSPI Maderera', 'OSPIL', 'OSSEG', 'Poder Judicial', 'Policía Federal', 'San Pedro',
+  'Sancor Salud', 'SCIS', 'Servicio Penitenciario Federal', 'SOSUNC', 'TV Salud', 'UOM', 'UTEPLIM', 'Visitar / Andar'
+]) with ordinality as o (nombre, orden);
+
+insert into public.obras_sociales (nombre, orden, activa) values
+  ('OSDE', 100, false),
+  ('SMG', 101, false),
+  ('Galeno', 102, false);
 
 insert into public.testimonios (texto, autor, permiso_at, publicado, orden) values
   ('[Testimonio real de una familia, publicado con su permiso.]', '[Nombre], mamá de [nombre]', current_date, true, 1),

@@ -52,7 +52,17 @@ export default async function panel() {
     await page.screenshot({ path: join(CAPTURAS, 'panel-mis-datos.png'), fullPage: true });
     await ir('/mi-cuenta');
     r.ok(await esperar('Tu cuenta es administradora'), 'Mi cuenta avisa que es administradora');
-    r.ok(!(await texto()).includes('Mis certificados'), 'Mi cuenta del admin oculta cursos y certificados vacíos');
+    await new Promise((x) => setTimeout(x, 1500)); // que terminen de cargar cursos y certificados
+    const miCuenta = await page.evaluate(() => document.querySelector('main').innerText);
+    r.ok(!miCuenta.includes('Mis certificados') && !miCuenta.includes('Mis cursos'), 'Mi cuenta del admin no muestra cursos ni certificados de otras personas');
+    await ir('/cursos/adolescencia-estar-cerca');
+    r.ok(await esperar('Tu progreso') && !(await texto()).includes('Comprar curso'), 'el admin ve los cursos pagos completos sin comprarlos');
+    await ir('/');
+    r.ok(!(await texto()).includes('[Testimonio'), 'la home no le muestra al admin testimonios sin publicar');
+    if (miCuenta.includes('Mis certificados')) {
+      console.log(`    (Mi cuenta muestra: ${miCuenta.replace(/\s+/g, ' ').slice(0, 400)})`);
+      await page.screenshot({ path: join(CAPTURAS, 'panel-mi-cuenta.png'), fullPage: true });
+    }
     r.ok(errores.length === 0, 'sin errores en la página');
   } finally {
     await browser.close();

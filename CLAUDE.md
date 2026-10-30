@@ -54,6 +54,18 @@ Las pruebas de navegador (`tests/e2e/`) usan el Chrome/Edge instalado y la servi
 - `supabase/templates/`: emails de Supabase Auth en español. En el plan gratuito, Supabase solo deja editar las plantillas con SMTP propio: se pegan cuando haya dominio verificado en Resend y SMTP configurado (Authentication → Emails → SMTP Settings). Mientras tanto, para la demo, "Confirm email" desactivado.
 - `vercel.json`: rewrites (`/api` → función; resto → `app.html`), `cleanUrls`, CSP y encabezados de seguridad. Si se agrega un dominio externo (analítica, etc.), sumarlo a la CSP.
 
+## Datos de la doctora y sedes
+
+- Dra. Felicitas Pino Meneses, pediatra, MP NQN 5643. Contacto, sedes y obras sociales en `src/data/contenido.js` (`CONTACTO`, `SEDES`, `OBRAS_SOCIALES`, `AGENDA_WEB`).
+- **CIEV** (Entre Ríos 1152, Neuquén): martes de 17 a 21 h, turnos por DrApp (la web reserva acá). Obras sociales del listado (35, en la tabla `obras_sociales`; OSDE, SMG y Galeno cargadas inactivas, "próximamente") y particulares.
+- **Consultorios OSPEPRI** (Mendoza 125): lunes y jueves 8–14 h, miércoles y viernes 14–18:30 h, solo pacientes OSPEPRI, turnos en la app Mi Sindicato (https://appsindicatopetroleros.org). La web solo enlaza esa app.
+- Las dos agendas no comparten días: no hace falta sincronizarlas. El adaptador `otro.js` queda apagado; reactivarlo solo si algún día se superponen.
+- Reseñas: `GET /api/resenas` (`server/lib/google.js`, Places API "New", `GOOGLE_MAPS_API_KEY`), hasta 5 reseñas sin filtrar, caché de 1 h, sin fotos de autores. Sin clave, la home muestra los testimonios publicados.
+
+## Reglas de consultas desde el frontend
+
+- A un admin las políticas RLS le dejan leer datos de todos. Toda consulta "propia" (accesos, certificados, progreso) filtra **siempre** por `usuario_id`, y todo listado público filtra por `publicado`/`activa`: nunca confiar solo en RLS para "lo mío". Los admins ven todos los cursos pagos completos (`cursosComprados` devuelve todos).
+
 ## Agenda con varios sistemas de turnos (`server/lib/agenda/`)
 
 La doctora toma turnos en DrApp y en otro sistema (pendiente: saber cuál). Reglas, sin excepciones:

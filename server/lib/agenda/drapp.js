@@ -9,7 +9,8 @@
  */
 import { errorPublico } from '../errores.js';
 
-const HORARIOS = ['09:00', '09:30', '10:00', '10:30', '11:00', '16:00', '16:30', '17:00'];
+// Datos de ejemplo: CIEV, martes de 17 a 21 h cada 30 minutos (la web solo ofrece martes).
+const HORARIOS = ['17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00', '20:30'];
 
 const pendiente = () =>
   errorPublico(501, 'La agenda online no está disponible en este momento. Escribinos por WhatsApp.', 'Integración con DrApp sin implementar');

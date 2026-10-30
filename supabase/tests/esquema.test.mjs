@@ -124,12 +124,12 @@ const meses = await curso('primeros-meses');
 const fiebre = await curso('fiebre-que-hago');
 const tiraError = (texto) => (r, e) => !!e && e.message.includes(texto);
 
-await espera('anon ve 2 obras sociales', () => como('anon', null, 'select * from obras_sociales'), (r) => r?.rows.length === 2);
+await espera('anon ve las 35 obras sociales activas (no las 3 "próximamente")', () => como('anon', null, 'select * from obras_sociales'), (r) => r?.rows.length === 35);
 await espera('anon ve 3 testimonios', () => como('anon', null, 'select * from testimonios'), (r) => r?.rows.length === 3);
 await db.query(`insert into testimonios (texto, autor, permiso_at) values ('borrador', 'x', current_date)`);
 await db.query(`update obras_sociales set activa = false where orden = 2`);
 await espera('anon no ve testimonio sin publicar', () => como('anon', null, 'select * from testimonios'), (r) => r?.rows.length === 3);
-await espera('anon no ve obra social inactiva', () => como('anon', null, 'select * from obras_sociales'), (r) => r?.rows.length === 1);
+await espera('anon no ve obra social inactiva', () => como('anon', null, 'select * from obras_sociales'), (r) => r?.rows.length === 34);
 await espera('usuario NO crea testimonios', () => como('authenticated', C, `insert into testimonios (texto, autor, permiso_at) values ('x','x',current_date)`), (r, e) => !!e);
 await espera('anon NO lee cupones', () => como('anon', null, 'select * from cupones'), (r, e) => !!e);
 await espera('usuario NO lee cupones', () => como('authenticated', C, 'select * from cupones'), (r, e) => !!e || r.rows.length === 0);

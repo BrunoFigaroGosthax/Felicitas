@@ -15,9 +15,11 @@ export function progresoLocal(slug) {
 /** IDs de las clases completadas del curso. */
 export async function leerProgreso(curso, enCuenta) {
   if (!enCuenta) return progresoLocal(curso.slug);
+  const sesion = await obtenerSesion();
   const { data, error } = await supabase
     .from('progreso')
     .select('clase_id')
+    .eq('usuario_id', sesion.usuario.id)
     .in('clase_id', curso.clases.map((c) => c.id))
     .not('completada_at', 'is', null);
   if (error) throw new Error('No pudimos cargar tu progreso.');
@@ -37,9 +39,11 @@ function posicionesLocales(slug) {
 
 export async function leerPosiciones(curso, enCuenta) {
   if (!enCuenta) return posicionesLocales(curso.slug);
+  const sesion = await obtenerSesion();
   const { data, error } = await supabase
     .from('progreso')
     .select('clase_id, posicion_segundos')
+    .eq('usuario_id', sesion.usuario.id)
     .in('clase_id', curso.clases.map((c) => c.id))
     .gt('posicion_segundos', 0);
   if (error) return {};

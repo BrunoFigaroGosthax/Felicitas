@@ -39,7 +39,7 @@ export default function Privacidad() {
       <h2>Datos de salud y de menores</h2>
       <p>
         El motivo y el detalle de la consulta son datos de salud, y los del paciente suelen ser de un menor de edad. Los carga el
-        adulto responsable y se usan solo para organizar la atención. Se envían al sistema de turnos del consultorio [DrApp] y no se
+        adulto responsable y se usan solo para organizar la atención. Se envían al sistema de turnos del consultorio (DrApp) y no se
         guardan en la base de datos de este sitio, que conserva solo el día, el horario, el motivo general y los datos de contacto
         del adulto.
       </p>
@@ -59,7 +59,8 @@ export default function Privacidad() {
         y algunos tienen servidores fuera de la Argentina:
       </p>
       <ul>
-        <li>[DrApp]: agenda de turnos del consultorio.</li>
+        <li>DrApp: agenda de turnos de CIEV.</li>
+        <li>Google: las reseñas que se muestran en la página se leen de Google; no le enviamos datos tuyos.</li>
         <li>Supabase: base de datos y cuentas de usuario.</li>
         <li>Vercel: alojamiento del sitio.</li>
         <li>Bunny: alojamiento de los videos y materiales de los cursos.</li>

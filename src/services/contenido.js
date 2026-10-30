@@ -6,15 +6,30 @@ import { api, esperar, USE_MOCKS } from './api.js';
 /** Testimonios generales (home): [{ texto, autor }]. */
 export async function listarTestimonios() {
   if (!supabase) return TESTIMONIOS;
-  const { data, error } = await supabase.from('testimonios').select('texto, autor').is('curso_id', null).order('orden');
+  // Filtro explícito: a un admin las políticas le dejan ver también los no publicados.
+  const { data, error } = await supabase.from('testimonios').select('texto, autor').eq('publicado', true).is('curso_id', null).order('orden');
   return error ? [] : data;
 }
 
 /** Nombres de las obras sociales con las que atiende. */
 export async function listarObrasSociales() {
   if (!supabase) return OBRAS_SOCIALES;
-  const { data, error } = await supabase.from('obras_sociales').select('nombre').order('orden');
+  // Filtro explícito: a un admin las políticas le dejan ver también las inactivas.
+  const { data, error } = await supabase.from('obras_sociales').select('nombre').eq('activa', true).order('orden');
   return error ? [] : data.map((o) => o.nombre);
+}
+
+/**
+ * Reseñas de Google del consultorio: { disponible, puntaje, total, verTodas, escribir, resenas[] }.
+ * Si no están configuradas (o fallan), { disponible: false } y la home muestra los testimonios.
+ */
+export async function listarResenas() {
+  if (USE_MOCKS) return { disponible: false };
+  try {
+    return await api('/resenas');
+  } catch {
+    return { disponible: false };
+  }
 }
 
 /** Botón de arrepentimiento. Devuelve { codigo } de seguimiento. */

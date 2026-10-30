@@ -6,7 +6,8 @@ import OpcionChip from '../components/ui/OpcionChip.jsx';
 import Icono from '../components/ui/Icono.jsx';
 import Casilla from '../components/ui/Casilla.jsx';
 import useTitulo from '../hooks/useTitulo.js';
-import { CONTACTO, MOTIVOS } from '../data/contenido.js';
+import Aviso from '../components/ui/Aviso.jsx';
+import { AGENDA_WEB, CONTACTO, MOTIVOS, SEDES } from '../data/contenido.js';
 import { TERMINOS_VERSION } from '../data/legal.js';
 import { listarObrasSociales } from '../services/contenido.js';
 import { Link } from 'react-router-dom';
@@ -29,6 +30,7 @@ const vacio = {
 };
 
 const fmtDia = new Intl.DateTimeFormat('es-AR', { weekday: 'short' });
+const fmtMes = new Intl.DateTimeFormat('es-AR', { month: 'short' });
 const fmtLargo = new Intl.DateTimeFormat('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
 const aFecha = (iso) => new Date(`${iso}T12:00:00`);
 const capitalizar = (s) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -70,7 +72,7 @@ export default function Turnos() {
     listarObrasSociales().then(setObrasSociales);
   }, []);
 
-  const dias = useMemo(() => proximosDiasHabiles(5), []);
+  const dias = useMemo(() => proximosDiasHabiles(5, new Date(), AGENDA_WEB.diasSemana), []);
   const hoy = useMemo(() => fechaLocal(), []);
   const pasosRef = useRef(null);
   const tituloRef = useRef(null);
@@ -141,7 +143,8 @@ export default function Turnos() {
       <div className="flex max-w-2xl flex-col gap-2.5">
         <h1 className="text-[clamp(34px,4.4vw,52px)] leading-[1.05]">Pedí tu turno</h1>
         <p className="text-[17px] text-ink-muted">
-          Son cuatro pasos. Los horarios que ves están actualizados con la agenda del consultorio.
+          Turnos en {SEDES[0].nombre} ({SEDES[0].direccion}), {SEDES[0].horarios[0].toLowerCase()}. Son cuatro pasos y los horarios
+          están actualizados con la agenda del consultorio.
         </p>
       </div>
 
@@ -190,6 +193,14 @@ export default function Turnos() {
                   <option>Particular</option>
                 </Field>
               </div>
+              {datos.obraSocial === 'OSPEPRI' && (
+                <Aviso>
+                  Con OSPEPRI también podés atenderte en los Consultorios OSPEPRI ({SEDES[1].direccion}), de lunes a viernes. Esos turnos se
+                  piden en la{' '}
+                  <a href={SEDES[1].turnos.url} target="_blank" rel="noopener noreferrer" className="font-bold underline">app Mi Sindicato</a>.
+                  Acá se reservan los turnos de CIEV (martes de 17 a 21 h).
+                </Aviso>
+              )}
               <Casilla checked={datos.acepta} onChange={set('acepta')} error={errores.acepta}>
                 Acepto que mis datos y los del paciente se usen para gestionar el turno, según la{' '}
                 <Link to="/privacidad" target="_blank" className="font-bold underline">política de privacidad</Link>.
@@ -237,10 +248,11 @@ export default function Turnos() {
                       seleccionado={datos.fecha === iso}
                       onSelect={() => setDatos((d) => ({ ...d, fecha: iso, hora: '' }))}
                       aria-label={capitalizar(fmtLargo.format(f))}
-                      className="flex h-[84px] w-[76px] flex-none flex-col items-center justify-center gap-0.5 rounded-[20px]"
+                      className="flex h-[96px] w-[76px] flex-none flex-col items-center justify-center gap-0.5 rounded-[20px]"
                     >
                       <span className="text-[13px] font-semibold capitalize">{fmtDia.format(f).replace('.', '')}</span>
                       <span className="font-display text-[26px] font-semibold leading-tight">{f.getDate()}</span>
+                      <span className="text-[12px] font-medium">{fmtMes.format(f).replace('.', '')}</span>
                     </OpcionChip>
                   );
                 })}
@@ -335,7 +347,7 @@ export default function Turnos() {
               ['Motivo', motivo ? motivo.label : 'Sin elegir'],
               ['Día', diaLargo],
               ['Horario', datos.hora || 'Sin elegir'],
-              ['Lugar', CONTACTO.direccion],
+              ['Lugar', `${SEDES[0].nombre} · ${SEDES[0].direccion}`],
             ].map(([dt, dd]) => (
               <div key={dt}>
                 <dt className="text-[13px] font-semibold text-ink-muted">{dt}</dt>

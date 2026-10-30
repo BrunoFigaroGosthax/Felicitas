@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ButtonLink } from '../components/ui/Button.jsx';
+import { buttonClasses, ButtonLink } from '../components/ui/Button.jsx';
 import Encabezado from '../components/ui/Encabezado.jsx';
 import Icono from '../components/ui/Icono.jsx';
 import CourseCard from '../components/cursos/CourseCard.jsx';
 import useTitulo from '../hooks/useTitulo.js';
-import { CONTACTO, SERVICIOS } from '../data/contenido.js';
-import { listarObrasSociales, listarTestimonios } from '../services/contenido.js';
+import { CONTACTO, SEDES, SERVICIOS } from '../data/contenido.js';
+import ResenasGoogle from '../components/inicio/ResenasGoogle.jsx';
+import { listarObrasSociales, listarResenas, listarTestimonios } from '../services/contenido.js';
 import { listarCursos } from '../services/cursos.js';
 
 export default function Inicio() {
@@ -14,8 +15,10 @@ export default function Inicio() {
   const [cursos, setCursos] = useState([]);
   const [testimonios, setTestimonios] = useState([]);
   const [obrasSociales, setObrasSociales] = useState([]);
+  const [resenas, setResenas] = useState(null);
 
   useEffect(() => {
+    listarResenas().then(setResenas);
     listarCursos()
       .then((todos) => setCursos(todos.filter((c) => c.destacado).slice(0, 3)))
       .catch(() => setCursos([]));
@@ -41,8 +44,8 @@ export default function Inicio() {
             <p className="eyebrow">Pediatría con propósito</p>
             <h1 className="text-[clamp(38px,5.6vw,64px)] leading-[1.02]">Acompaño la salud de tu hijo en cada etapa</h1>
             <p className="max-w-[520px] text-[clamp(16px,1.6vw,19px)] leading-relaxed">
-              Soy Felicitas Pino, pediatra. Atiendo desde los primeros días hasta la adolescencia, con tiempo para
-              escucharte y explicarte cada paso.
+              Soy Felicitas Pino Meneses, médica pediatra en Neuquén. Atiendo desde los primeros días hasta la adolescencia, con
+              tiempo para escucharte y explicarte cada paso.
             </p>
             <div className="flex flex-wrap gap-3 pt-2">
               <ButtonLink to="/turnos" size="lg">Pedir turno</ButtonLink>
@@ -52,7 +55,7 @@ export default function Inicio() {
           <div className="flex min-w-0 flex-[1_1_300px] justify-center">
             <img
               src="/img/felicitas-retrato.jpg"
-              alt="Retrato de la Dra. Felicitas Pino, sonriendo, con ambo blanco"
+              alt="Retrato de la Dra. Felicitas Pino Meneses, sonriendo, con ambo blanco"
               width="1080"
               height="1080"
               fetchpriority="high"
@@ -75,20 +78,19 @@ export default function Inicio() {
         />
         <div className="flex min-w-0 flex-[1.3_1_400px] flex-col gap-4">
           <Encabezado eyebrow="Sobre mí" titulo="Te invito a conocerme" />
-          {/* Texto genérico de demostración: reemplazar por la presentación real (formación, experiencia, dónde atiende). */}
           <p className="text-lg leading-relaxed">
-            Soy pediatra y acompaño a las familias desde los primeros días del bebé hasta la adolescencia. En cada consulta me tomo el
-            tiempo para escucharte, revisar con calma y explicarte cada paso con palabras claras.
+            Soy Felicitas Pino Meneses, médica especialista en Pediatría. Brindo una atención cercana, personalizada y basada en la
+            evidencia científica, acompañando a cada familia desde los primeros días de vida hasta la adolescencia.
           </p>
           <p className="leading-relaxed text-ink-muted">
-            Creo en una pediatría cercana y preventiva: que sepas qué esperar en cada etapa, cuándo consultar y cómo cuidar a tu hijo en
-            casa. Por eso, además de la consulta, preparo cursos y guías para acompañarte entre visita y visita.
+            Además de la consulta, preparo cursos y guías para acompañarte entre visita y visita, con información clara para el día a
+            día con tus hijos.
           </p>
           <dl className="mt-2 grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-4">
             {[
               ['Matrícula', CONTACTO.matricula],
-              ['Atiende', CONTACTO.direccion],
-              ['Obras sociales', obrasSociales.length ? `${obrasSociales.join(', ')} y particular` : 'Particular'],
+              ['Atiendo en', 'CIEV y Consultorios OSPEPRI, Neuquén'],
+              ['Obras sociales', obrasSociales.length ? `${obrasSociales.length} en CIEV, y particulares` : 'Particulares'],
             ].map(([dt, dd]) => (
               <div key={dt} className="rounded-bloque border border-borde bg-card p-4">
                 <dt className="text-sm font-medium text-ink-muted">{dt}</dt>
@@ -96,6 +98,17 @@ export default function Inicio() {
               </div>
             ))}
           </dl>
+          {obrasSociales.length > 0 && (
+            <details className="rounded-bloque border border-borde bg-card px-4">
+              <summary className="min-h-11 cursor-pointer py-3 font-bold">Ver las obras sociales</summary>
+              <ul className="flex flex-wrap gap-2 pb-4">
+                {obrasSociales.map((o) => (
+                  <li key={o} className="rounded-full bg-lila-suave px-3 py-1 text-sm font-medium">{o}</li>
+                ))}
+              </ul>
+              <p className="pb-4 text-sm text-ink-muted">Solo en CIEV. En los Consultorios OSPEPRI se atiende únicamente OSPEPRI.</p>
+            </details>
+          )}
         </div>
       </section>
 
@@ -112,6 +125,37 @@ export default function Inicio() {
               </article>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Dónde atiendo */}
+      <section id="donde" className="container-page flex scroll-mt-28 flex-col gap-8 pt-16 lg:pt-24">
+        <Encabezado eyebrow="Dónde atiendo" titulo="Dos consultorios en Neuquén" />
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-5">
+          {SEDES.map((s, i) => (
+            <article key={s.id} className={`flex flex-col gap-3 rounded-card p-7 ${i === 0 ? 'bg-amarillo' : 'bg-menta'}`}>
+              <h3 className="text-2xl leading-tight">{s.nombre}</h3>
+              <p className="font-semibold">{s.direccion}</p>
+              <ul className="flex flex-col gap-0.5">
+                {s.horarios.map((h) => (
+                  <li key={h}>{h}</li>
+                ))}
+              </ul>
+              <p className="text-[15px]">{s.pacientes}</p>
+              <div className="mt-auto flex flex-wrap gap-3 pt-2">
+                {s.turnos.ruta ? (
+                  <ButtonLink to={s.turnos.ruta} size="sm">{s.turnos.texto}</ButtonLink>
+                ) : (
+                  <a href={s.turnos.url} target="_blank" rel="noopener noreferrer" className={buttonClasses({ size: 'sm' })}>
+                    {s.turnos.texto}
+                  </a>
+                )}
+                <a href={s.mapa} target="_blank" rel="noopener noreferrer" className={buttonClasses({ variante: 'secundario', size: 'sm' })}>
+                  Cómo llegar
+                </a>
+              </div>
+            </article>
+          ))}
         </div>
       </section>
 
@@ -151,22 +195,27 @@ export default function Inicio() {
         </div>
       </section>
 
-      {/* Testimonios (la sección no aparece hasta que haya alguno publicado) */}
-      {testimonios.length > 0 && (
-        <section className="bg-amarillo">
+      {/* Opiniones: reseñas de Google si están conectadas; si no, los testimonios publicados desde el panel.
+          Sin ninguna de las dos, la sección no aparece. */}
+      {(resenas?.disponible && resenas.resenas.length > 0) || testimonios.length > 0 ? (
+        <section id="opiniones" className="scroll-mt-28 bg-amarillo">
           <div className="container-page flex flex-col gap-8 py-16 lg:py-24">
             <Encabezado titulo="Lo que dicen las familias" />
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-5">
-              {testimonios.map((t, i) => (
-                <figure key={i} className="flex flex-col gap-4 rounded-card bg-page p-7">
-                  <blockquote className="text-[17px] leading-relaxed">{t.texto}</blockquote>
-                  <figcaption className="text-sm font-semibold text-ink-muted">{t.autor}</figcaption>
-                </figure>
-              ))}
-            </div>
+            {resenas?.disponible && resenas.resenas.length > 0 ? (
+              <ResenasGoogle datos={resenas} />
+            ) : (
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-5">
+                {testimonios.map((t, i) => (
+                  <figure key={i} className="flex flex-col gap-4 rounded-card bg-page p-7">
+                    <blockquote className="text-[17px] leading-relaxed">{t.texto}</blockquote>
+                    <figcaption className="text-sm font-semibold text-ink-muted">{t.autor}</figcaption>
+                  </figure>
+                ))}
+              </div>
+            )}
           </div>
         </section>
-      )}
+      ) : null}
     </>
   );
 }
