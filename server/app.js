@@ -2,6 +2,7 @@
 import express from 'express';
 import { handler } from './lib/errores.js';
 import { resenasGoogle } from './lib/google.js';
+import { cerradoEnMantenimiento } from './lib/mantenimiento.js';
 import adminRutas from './routes/admin.js';
 import agenda from './routes/agenda.js';
 import arrepentimiento from './routes/arrepentimiento.js';
@@ -28,6 +29,8 @@ app.get(
     res.json(datos);
   }),
 );
+// En mantenimiento no se reservan turnos (cancelar sí) ni se compran cursos.
+app.post(['/api/turnos', /^\/api\/compras(\/.*)?$/], cerradoEnMantenimiento);
 app.use('/api/turnos', turnos);
 app.use('/api/agenda', agenda);
 app.use('/api/compras', compras);

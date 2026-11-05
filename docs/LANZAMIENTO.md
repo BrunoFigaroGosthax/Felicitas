@@ -5,11 +5,11 @@ Marcar cada punto al hacerlo.
 
 ## 1. Seguridad: apagar lo que es solo de demostración
 
-- [ ] **Borrar los cupones de prueba** (`PRUEBA100` regala cualquier curso a quien conozca el código). En el SQL Editor de Supabase:
+- [x] **Borrar los cupones de prueba** (hecho el 2/11/2026, junto con los cursos, testimonios y turno de ejemplo) (`PRUEBA100` regala cualquier curso a quien conozca el código). En el SQL Editor de Supabase:
       `delete from public.cupones where codigo in ('PRUEBA10', 'PRUEBA100');`
       (si ya se usaron, no se pueden borrar: pausarlos desde Panel → Cupones).
 - [ ] **Sacar `PAGOS_DEMO`** de las variables de Vercel y hacer Redeploy.
-- [ ] **Borrar las compras de demostración** y los accesos que dieron:
+- [x] **Borrar las compras de demostración** (hecho el 2/11/2026; si se hacen nuevas compras demo, repetir) y los accesos que dieron:
       `delete from public.accesos where compra_id in (select id from public.compras where proveedor = 'demo');`
       `delete from public.compras where proveedor = 'demo';`
 - [ ] **Volver a activar "Confirm email"** en Supabase → Authentication → Providers → Email.

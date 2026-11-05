@@ -3,6 +3,26 @@ import { OBRAS_SOCIALES, TESTIMONIOS } from '../data/contenido.js';
 import { supabase } from '../lib/supabase.js';
 import { api, esperar, USE_MOCKS } from './api.js';
 
+const ABIERTO = { mantenimiento: false, mensaje: null };
+let ajustes = null;
+
+/**
+ * Ajustes del sitio (tabla `ajustes`): { mantenimiento, mensaje }. Se piden una vez por visita.
+ * Si la base no responde en 3 s o falla, el sitio queda abierto.
+ */
+export function obtenerAjustes() {
+  if (!supabase) return Promise.resolve(ABIERTO);
+  ajustes ??= Promise.race([
+    supabase
+      .from('ajustes')
+      .select('mantenimiento, mensaje')
+      .maybeSingle()
+      .then(({ data, error }) => (error || !data ? ABIERTO : data)),
+    new Promise((listo) => setTimeout(() => listo(ABIERTO), 3000)),
+  ]).catch(() => ABIERTO);
+  return ajustes;
+}
+
 /** Testimonios generales (home): [{ texto, autor }]. */
 export async function listarTestimonios() {
   if (!supabase) return TESTIMONIOS;

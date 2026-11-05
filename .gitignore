@@ -10,3 +10,6 @@ supabase/.branches
 .DS_Store
 *.log
 tests/e2e/capturas
+
+# Material de la doctora (se sube desde el panel, no va al repo)
+/*.pdf

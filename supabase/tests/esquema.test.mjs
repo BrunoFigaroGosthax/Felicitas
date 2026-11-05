@@ -275,6 +275,12 @@ await db.query(`insert into compras (usuario_id, curso_id, monto, estado, provee
 await espera('resumen de ventas: no cuenta las de demostración', () => como('authenticated', ADM, `select * from admin_resumen_ventas() where curso_id = '${cursoDemo}'`), (r) => r?.rows.length === 0);
 await espera('curso con ventas no se borra', () => como('authenticated', ADM, `delete from cursos where slug = 'adolescencia-estar-cerca'`), (r, e) => !!e);
 await espera('admin borra curso sin ventas', () => como('authenticated', ADM, `delete from cursos where id = '${cursoAdm}' returning id`), (r) => r?.rows.length === 1);
+// ---------------- Migración 7: modo mantenimiento ----------------
+await espera('ajustes: una fila, abierto por defecto', () => como('anon', null, 'select mantenimiento from ajustes'), (r) => r?.rows.length === 1 && r.rows[0].mantenimiento === false);
+await espera('ajustes: no se agrega otra fila', () => db.query('insert into ajustes (id) values (false)'), (r, e) => !!e);
+await espera('anon NO cambia ajustes', () => como('anon', null, 'update ajustes set mantenimiento = true returning id'), (r, e) => !!e || r.rows.length === 0);
+await espera('alumno NO cambia ajustes', () => como('authenticated', E, 'update ajustes set mantenimiento = true returning id'), (r, e) => !!e || r.rows.length === 0);
+await espera('admin pone el sitio en mantenimiento', () => como('authenticated', ADM, 'update ajustes set mantenimiento = true returning mantenimiento'), (r) => r?.rows[0]?.mantenimiento === true);
 
 console.log(fallas ? `\n${fallas} FALLAS` : '\nTodo OK');
 process.exit(fallas ? 1 : 0);

@@ -82,9 +82,15 @@ La doctora toma turnos en DrApp y en otro sistema (pendiente: saber cuál). Regl
 ## Modo demostración (para mostrar el sitio antes de tener todas las cuentas)
 
 - `PAGOS_DEMO=true` (servidor): sin Mercado Pago, la compra va a `/pago/demo`, que aprueba o rechaza sin cobrar. Recorre el flujo real (crear_compra, cupón, acceso por trigger) con `compras.proveedor = 'demo'`; el panel las marca "Demo" y no las suma a los totales. Si Mercado Pago está configurado, tiene prioridad.
-- Contenido de demo cargado en la base: descripciones de clases y precios (18000, 15000, 12000). Reemplazar desde el panel.
+- Los cursos, testimonios y cupones de ejemplo se borraron de la base el 2/11/2026 (quedan en `supabase/seed.sql` para desarrollo). El primer curso real es el manual "Botiquín" (gratis, PDF). Las pruebas e2e todavía usan los cursos de ejemplo: hay que adaptarlas para que creen sus propios cursos temporales.
 - Para borrar las compras de demostración (y los accesos que dieron) al salir a producción:
   `delete from public.accesos where compra_id in (select id from public.compras where proveedor = 'demo'); delete from public.compras where proveedor = 'demo';`
+
+## Modo mantenimiento
+
+- Tabla `ajustes` (una sola fila, migración `20261105000000_mantenimiento.sql`): `mantenimiento` y `mensaje` opcional. Hoy se cambia en Supabase (`update public.ajustes set mantenimiento = true;`); la política para que lo haga el admin ya existe, falta el interruptor en el panel.
+- Web (`Layout.jsx`, `obtenerAjustes()` en `services/contenido.js`): el público ve `EnMantenimiento.jsx`; los admin ven el sitio con una franja de aviso. Siempre abiertas: ingreso, crear cuenta, recuperar clave, panel, cancelar turno y legales. Si la tabla no responde en 3 s o falla, el sitio queda abierto.
+- Servidor (`server/lib/mantenimiento.js`, caché de 30 s): responde 503 a reservar turnos y a todo `POST /api/compras`. Cancelar turnos, arrepentimiento, webhooks y crons siguen.
 
 ## Panel de administración (`/admin`)
 
