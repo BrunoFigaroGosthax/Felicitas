@@ -24,12 +24,12 @@ function useContenido(pathname) {
   if (!ajustes) return { pagina: null, aviso };
   if (!enMantenimiento) return { pagina: <Outlet />, aviso };
   if (cargando || esAdmin === null) return { pagina: null, aviso };
-  return { pagina: esAdmin ? <Outlet /> : <EnMantenimiento mensaje={ajustes.mensaje} />, aviso };
+  return { pagina: esAdmin ? <Outlet /> : null, cerrado: !esAdmin && ajustes, aviso };
 }
 
 export default function Layout() {
   const { pathname, hash } = useLocation();
-  const { pagina, aviso } = useContenido(pathname);
+  const { pagina, cerrado, aviso } = useContenido(pathname);
 
   // Al cambiar de página, volver arriba; si hay ancla (/#sobre), ir a esa sección.
   useEffect(() => {
@@ -41,6 +41,8 @@ export default function Layout() {
     if (el) el.scrollIntoView();
   }, [pathname, hash]);
 
+  if (cerrado) return <EnMantenimiento mensaje={cerrado.mensaje} />;
+  if (pagina === null) return null; // un instante, mientras se sabe si el sitio está abierto
   return (
     <div className="flex min-h-screen flex-col overflow-x-hidden">
       <a
