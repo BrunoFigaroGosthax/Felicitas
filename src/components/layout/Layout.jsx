@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useSesion } from '../../context/Sesion.jsx';
 import EnMantenimiento from '../../pages/EnMantenimiento.jsx';
-import { obtenerAjustes } from '../../services/contenido.js';
+import { escucharAjustes, obtenerAjustes } from '../../services/contenido.js';
 import Header from './Header.jsx';
 import Footer from './Footer.jsx';
 
@@ -15,6 +15,7 @@ function useContenido(pathname) {
   const { esAdmin, cargando } = useSesion();
   useEffect(() => {
     obtenerAjustes().then(setAjustes);
+    return escucharAjustes(setAjustes);
   }, []);
 
   const abierta = pathname.startsWith('/admin') || SIEMPRE_ABIERTAS.includes(pathname.replace(/\/$/, ''));

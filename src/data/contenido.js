@@ -1,4 +1,7 @@
 // Datos de contacto y textos fijos.
+// Texto del aviso de mantenimiento cuando no se carga uno propio (tabla `ajustes`, columna `mensaje`).
+export const MENSAJE_MANTENIMIENTO = 'Volvemos en un rato con los turnos y los cursos al día. ¡Gracias por la paciencia!';
+
 export const CONTACTO = {
   nombre: 'Dra. Felicitas Pino Meneses',
   matricula: 'MP NQN 5643',

@@ -23,6 +23,20 @@ export function obtenerAjustes() {
   return ajustes;
 }
 
+const oyentes = new Set();
+
+/** Avisa a esta pestaña que los ajustes cambiaron desde el panel (la franja de aviso se actualiza sin recargar). */
+export function ajustesCambiados(nuevos) {
+  ajustes = Promise.resolve(nuevos);
+  oyentes.forEach((oyente) => oyente(nuevos));
+}
+
+/** Devuelve la función para dejar de escuchar. */
+export function escucharAjustes(oyente) {
+  oyentes.add(oyente);
+  return () => oyentes.delete(oyente);
+}
+
 /** Testimonios generales (home): [{ texto, autor }]. */
 export async function listarTestimonios() {
   if (!supabase) return TESTIMONIOS;

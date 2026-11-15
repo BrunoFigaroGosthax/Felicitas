@@ -4,6 +4,7 @@ import Aviso from '../../components/ui/Aviso.jsx';
 import { useSesion } from '../../context/Sesion.jsx';
 import useTitulo from '../../hooks/useTitulo.js';
 import { supabase } from '../../lib/supabase.js';
+import EstadoSitio from './EstadoSitio.jsx';
 
 const SECCIONES = [
   { to: 'cursos', label: 'Cursos' },
@@ -29,6 +30,7 @@ export default function AdminLayout() {
   else {
     cuerpo = (
       <>
+        <EstadoSitio />
         <nav aria-label="Secciones del panel" className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
           {SECCIONES.map((s) => (
             <NavLink

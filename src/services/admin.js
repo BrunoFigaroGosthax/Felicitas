@@ -2,6 +2,7 @@
 // verifican es_admin()). Solo los videos pasan por el backend, que tiene la clave de Bunny.
 import { supabase } from '../lib/supabase.js';
 import { api } from './api.js';
+import { ajustesCambiados } from './contenido.js';
 
 const BUCKET = 'materiales';
 const MAX_PDF = 50 * 1024 * 1024;
@@ -46,6 +47,22 @@ export const ONDAS_POR_FONDO = {
   menta: [{ trazo: 'b', color: 'amarillo' }],
   lavanda: [{ trazo: 'c', color: 'amarillo' }],
 };
+
+// ---------------- Estado del sitio (tabla `ajustes`) ----------------
+
+const CAMPOS_AJUSTES = 'mantenimiento, mensaje, actualizado_at';
+
+export const leerAjustes = () => q(db().from('ajustes').select(CAMPOS_AJUSTES).single(), 'No pudimos leer el estado del sitio.');
+
+/** Abre el sitio o lo pone en mantenimiento. `mensaje` vacío = texto por defecto del aviso. */
+export async function guardarAjustes({ mantenimiento, mensaje }) {
+  const fila = await q(
+    db().from('ajustes').update({ mantenimiento, mensaje: mensaje?.trim() || null }).eq('id', true).select(CAMPOS_AJUSTES).single(),
+    'No pudimos cambiar el estado del sitio.',
+  );
+  ajustesCambiados(fila);
+  return fila;
+}
 
 // ---------------- Cursos ----------------
 
