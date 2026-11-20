@@ -3,7 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 import Aviso from '../components/ui/Aviso.jsx';
 import Button, { ButtonLink } from '../components/ui/Button.jsx';
 import Icono from '../components/ui/Icono.jsx';
-import { CONTACTO, MOTIVOS } from '../data/contenido.js';
+import { MOTIVOS } from '../data/contenido.js';
+import useTextos from '../hooks/useTextos.js';
 import useTitulo from '../hooks/useTitulo.js';
 import { cancelarTurno, turnoParaCancelar } from '../services/turnos.js';
 
@@ -15,6 +16,7 @@ const diaLargo = (iso) => {
 
 /** /turnos/cancelar?t=… : el paciente cancela desde el link del email, sin cuenta. */
 export default function CancelarTurno() {
+  const { contacto } = useTextos();
   useTitulo('Cancelar turno');
   const [params] = useSearchParams();
   const token = params.get('t') || '';
@@ -99,7 +101,7 @@ export default function CancelarTurno() {
         {error && (
           <Aviso tono="error" className="w-full">
             {error}{' '}
-            <a href={CONTACTO.whatsappUrl} className="underline">Escribinos por WhatsApp</a>.
+            <a href={contacto.whatsappUrl} className="underline">Escribinos por WhatsApp</a>.
           </Aviso>
         )}
       </div>

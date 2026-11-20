@@ -287,6 +287,11 @@ await espera('admin sube imagen del sitio', () => como('authenticated', ADM, `in
 await espera('alumno NO sube imagen del sitio', () => como('authenticated', E, `insert into storage.objects (bucket_id, name) values ('sitio', 'x.webp')`), (r, e) => !!e);
 await espera('admin cambia la imagen del retrato', () => como('authenticated', ADM, `update ajustes set imagen_retrato = 'https://x/retrato.webp' returning imagen_retrato`), (r) => r?.rows[0]?.imagen_retrato === 'https://x/retrato.webp');
 await espera('alumno NO cambia imágenes', () => como('authenticated', E, `update ajustes set imagen_consultorio = 'x' returning id`), (r, e) => !!e || r.rows.length === 0);
+// ---------------- Migración 9: textos del sitio ----------------
+await espera('textos: vacío por defecto y visible para todos', () => como('anon', null, 'select textos from ajustes'), (r) => JSON.stringify(r?.rows[0]?.textos) === '{}');
+await espera('admin cambia textos', () => como('authenticated', ADM, `update ajustes set textos = '{"contacto":{"email":"a@b.c"}}' returning textos`), (r) => r?.rows[0]?.textos?.contacto?.email === 'a@b.c');
+await espera('textos: solo un objeto', () => db.query(`update ajustes set textos = '[]'`), (r, e) => !!e);
+await espera('alumno NO cambia textos', () => como('authenticated', E, `update ajustes set textos = '{}' returning id`), (r, e) => !!e || r.rows.length === 0);
 
 console.log(fallas ? `\n${fallas} FALLAS` : '\nTodo OK');
 process.exit(fallas ? 1 : 0);

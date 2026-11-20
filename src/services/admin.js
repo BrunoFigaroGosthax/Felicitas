@@ -66,6 +66,21 @@ export async function guardarAjustes({ mantenimiento, mensaje }) {
   return fila;
 }
 
+// ---------------- Textos del sitio (ajustes.textos) ----------------
+
+/** Lo guardado desde el panel: { inicio?, contacto?, sedes? } (solo lo que difiere de los originales). */
+export const leerTextos = async () => (await q(db().from('ajustes').select('textos').single(), 'No pudimos leer los textos del sitio.')).textos || {};
+
+/** Guarda una sección ('inicio' | 'contacto' | 'sedes'); vacía o null = volver a los originales. Devuelve todo lo guardado. */
+export async function guardarTextos(seccion, valor) {
+  const textos = { ...(await leerTextos()) }; // se relee para no pisar otra sección cambiada en otra pestaña
+  if (valor && Object.keys(valor).length) textos[seccion] = valor;
+  else delete textos[seccion];
+  const fila = await q(db().from('ajustes').update({ textos }).eq('id', true).select('textos').single(), 'No pudimos guardar los textos.');
+  ajustesCambiados({ textos: fila.textos });
+  return fila.textos;
+}
+
 // ---------------- Imágenes del sitio (bucket público "sitio") ----------------
 
 const MAX_ORIGINAL = 25 * 1024 * 1024; // lo que se acepta antes de achicar (fotos de celular)

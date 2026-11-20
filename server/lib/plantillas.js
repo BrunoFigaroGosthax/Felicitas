@@ -4,7 +4,7 @@ import { config } from './config.js';
 const fmtFecha = new Intl.DateTimeFormat('es-AR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
 const fecha = (iso) => fmtFecha.format(new Date(`${iso}T12:00:00Z`));
 const firma = '\n\nDra. Felicitas Pino Meneses · Pediatría con propósito';
-// Los turnos que se piden por la web son en CIEV (ver SEDES en src/data/contenido.js).
+// Los turnos que se piden por la web son en CIEV. `lugar` lo arma lugarTurnos() (lib/ajustes.js) con lo cargado en el panel.
 const LUGAR = 'CIEV, Entre Ríos 1152, Neuquén';
 
 const cancelarTexto = (linkCancelar) =>
@@ -12,20 +12,20 @@ const cancelarTexto = (linkCancelar) =>
     ? `Si no podés venir, cancelalo con 24 horas de anticipación desde este link:\n${linkCancelar}\n`
     : `Si no podés venir, avisanos con 24 horas de anticipación respondiendo este email.\n`;
 
-export const turnoConfirmado = ({ responsable, fecha: dia, hora, linkCancelar }) => ({
+export const turnoConfirmado = ({ responsable, fecha: dia, hora, linkCancelar, lugar = LUGAR }) => ({
   asunto: 'Tu turno quedó reservado',
   texto:
     `Hola, ${responsable}:\n\nTu turno quedó reservado para el ${fecha(dia)} a las ${hora}.\n` +
-    `Lugar: ${LUGAR}.\n\n` +
+    `Lugar: ${lugar}.\n\n` +
     cancelarTexto(linkCancelar) +
     `Ante una urgencia, no esperes al turno: acudí a la guardia más cercana.${firma}`,
 });
 
-export const turnoRecordatorio = ({ responsable, fecha: dia, hora, linkCancelar }) => ({
+export const turnoRecordatorio = ({ responsable, fecha: dia, hora, linkCancelar, lugar = LUGAR }) => ({
   asunto: `Recordatorio: tu turno es mañana a las ${hora}`,
   texto:
     `Hola, ${responsable}:\n\nTe recordamos que mañana, ${fecha(dia)}, tenés turno a las ${hora}.\n` +
-    `Lugar: ${LUGAR}.\n\n` +
+    `Lugar: ${lugar}.\n\n` +
     (linkCancelar ? `Si al final no podés venir, cancelalo acá así otra familia puede usar el horario:\n${linkCancelar}\n` : '') +
     `Ante una urgencia, no esperes al turno: acudí a la guardia más cercana.${firma}`,
 });

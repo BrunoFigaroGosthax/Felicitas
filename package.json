@@ -13,7 +13,7 @@
     "build": "vite build && node --env-file-if-exists=.env scripts/prerender.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
-    "test": "node --test \"server/**/*.test.js\"",
+    "test": "node --test \"server/**/*.test.js\" \"src/**/*.test.js\"",
     "test:db": "node supabase/tests/esquema.test.mjs",
     "test:e2e": "node --env-file-if-exists=server/.env tests/e2e/correr.mjs",
     "check": "npm run lint && npm test && npm run test:db && npm run build"

@@ -5,8 +5,10 @@ import Encabezado from '../components/ui/Encabezado.jsx';
 import Icono from '../components/ui/Icono.jsx';
 import CourseCard from '../components/cursos/CourseCard.jsx';
 import useAjustes from '../hooks/useAjustes.js';
+import useTextos from '../hooks/useTextos.js';
 import useTitulo from '../hooks/useTitulo.js';
-import { CONTACTO, IMAGENES_SITIO, SEDES, SERVICIOS } from '../data/contenido.js';
+import { IMAGENES_SITIO, SERVICIOS } from '../data/contenido.js';
+import { parrafos } from '../lib/textos.js';
 import ResenasGoogle from '../components/inicio/ResenasGoogle.jsx';
 import { listarObrasSociales, listarResenas, listarTestimonios } from '../services/contenido.js';
 import { listarCursos } from '../services/cursos.js';
@@ -20,6 +22,9 @@ export default function Inicio() {
   // Fotos cambiables desde el panel; sin personalizar, las originales de /img.
   const ajustes = useAjustes();
   const imagenes = Object.fromEntries(IMAGENES_SITIO.map((i) => [i.clave, ajustes?.[i.campo] || i.original]));
+  // Textos cambiables desde Panel → Textos.
+  const { inicio, contacto, sedes } = useTextos();
+  const [primerParrafo, ...otrosParrafos] = parrafos(inicio.sobreMi);
 
   useEffect(() => {
     listarResenas().then(setResenas);
@@ -46,11 +51,8 @@ export default function Inicio() {
         <div className="container-page relative flex flex-wrap items-center gap-10 py-12 sm:py-20 lg:py-24">
           <div className="flex min-w-0 flex-[1_1_420px] flex-col gap-5">
             <p className="eyebrow">Pediatría con propósito</p>
-            <h1 className="text-[clamp(38px,5.6vw,64px)] leading-[1.02]">Acompaño la salud de tu hijo en cada etapa</h1>
-            <p className="max-w-[520px] text-[clamp(16px,1.6vw,19px)] leading-relaxed">
-              Soy Felicitas Pino Meneses, médica pediatra en Neuquén. Atiendo desde los primeros días hasta la adolescencia, con
-              tiempo para escucharte y explicarte cada paso.
-            </p>
+            <h1 className="text-[clamp(38px,5.6vw,64px)] leading-[1.02]">{inicio.titulo}</h1>
+            <p className="max-w-[520px] whitespace-pre-line text-[clamp(16px,1.6vw,19px)] leading-relaxed">{inicio.bajada}</p>
             <div className="flex flex-wrap gap-3 pt-2">
               <ButtonLink to="/turnos" size="lg">Pedir turno</ButtonLink>
               <ButtonLink to="/cursos" size="lg" variante="secundario">Ver cursos</ButtonLink>
@@ -81,19 +83,15 @@ export default function Inicio() {
           className="aspect-[4/5] max-h-[520px] min-w-0 flex-[1_1_300px] rounded-card bg-menta object-cover"
         />
         <div className="flex min-w-0 flex-[1.3_1_400px] flex-col gap-4">
-          <Encabezado eyebrow="Sobre mí" titulo="Te invito a conocerme" />
-          <p className="text-lg leading-relaxed">
-            Soy Felicitas Pino Meneses, médica especialista en Pediatría. Brindo una atención cercana, personalizada y basada en la
-            evidencia científica, acompañando a cada familia desde los primeros días de vida hasta la adolescencia.
-          </p>
-          <p className="leading-relaxed text-ink-muted">
-            Además de la consulta, preparo cursos y guías para acompañarte entre visita y visita, con información clara para el día a
-            día con tus hijos.
-          </p>
+          <Encabezado eyebrow="Sobre mí" titulo={inicio.sobreMiTitulo} />
+          <p className="whitespace-pre-line text-lg leading-relaxed">{primerParrafo}</p>
+          {otrosParrafos.map((p) => (
+            <p key={p} className="whitespace-pre-line leading-relaxed text-ink-muted">{p}</p>
+          ))}
           <dl className="mt-2 grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-4">
             {[
-              ['Matrícula', CONTACTO.matricula],
-              ['Atiendo en', 'CIEV y Consultorios OSPEPRI, Neuquén'],
+              ['Matrícula', contacto.matricula],
+              ['Atiendo en', `${sedes.map((s) => s.nombre).join(' y ')}, Neuquén`],
               ['Obras sociales', obrasSociales.length ? `${obrasSociales.length} en CIEV, y particulares` : 'Particulares'],
             ].map(([dt, dd]) => (
               <div key={dt} className="rounded-bloque border border-borde bg-card p-4">
@@ -110,7 +108,7 @@ export default function Inicio() {
                   <li key={o} className="rounded-full bg-lila-suave px-3 py-1 text-sm font-medium">{o}</li>
                 ))}
               </ul>
-              <p className="pb-4 text-sm text-ink-muted">Solo en CIEV. En los Consultorios OSPEPRI se atiende únicamente OSPEPRI.</p>
+              <p className="pb-4 text-sm text-ink-muted">Solo en {sedes[0].nombre}. En {sedes[1].nombre} se atiende únicamente OSPEPRI.</p>
             </details>
           )}
         </div>
@@ -136,7 +134,7 @@ export default function Inicio() {
       <section id="donde" className="container-page flex scroll-mt-28 flex-col gap-8 pt-16 lg:pt-24">
         <Encabezado eyebrow="Dónde atiendo" titulo="Dos consultorios en Neuquén" />
         <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-5">
-          {SEDES.map((s, i) => (
+          {sedes.map((s, i) => (
             <article key={s.id} className={`flex flex-col gap-3 rounded-card p-7 ${i === 0 ? 'bg-amarillo' : 'bg-menta'}`}>
               <h3 className="text-2xl leading-tight">{s.nombre}</h3>
               <p className="font-semibold">{s.direccion}</p>

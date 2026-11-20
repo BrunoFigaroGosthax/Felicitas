@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { CONTACTO, MENSAJE_MANTENIMIENTO } from '../data/contenido.js';
+import { MENSAJE_MANTENIMIENTO } from '../data/contenido.js';
+import useTextos from '../hooks/useTextos.js';
 import useTitulo from '../hooks/useTitulo.js';
 
 const enlace = 'eyebrow border-b border-ink/40 pb-1 text-ink transition-colors hover:border-ink';
@@ -7,6 +8,7 @@ const enlace = 'eyebrow border-b border-ink/40 pb-1 text-ink transition-colors h
 /** Pantalla completa que ve el público mientras el sitio está en mantenimiento (tabla `ajustes`). Sin encabezado ni pie. */
 export default function EnMantenimiento({ mensaje }) {
   useTitulo('Volvemos en un rato');
+  const { contacto } = useTextos();
   return (
     <main id="contenido" className="relative flex min-h-screen items-center justify-center overflow-hidden bg-page px-4 py-16">
       {/* Ondas en las esquinas, lejos del texto */}
@@ -29,10 +31,10 @@ export default function EnMantenimiento({ mensaje }) {
           {mensaje || MENSAJE_MANTENIMIENTO}
         </p>
         <div className="flex flex-wrap justify-center gap-8 pt-2">
-          <a href={CONTACTO.instagramUrl} target="_blank" rel="noopener noreferrer" className={enlace}>
+          <a href={contacto.instagramUrl} target="_blank" rel="noopener noreferrer" className={enlace}>
             Instagram
           </a>
-          <a href={CONTACTO.whatsappUrl} target="_blank" rel="noopener noreferrer" className={enlace}>
+          <a href={contacto.whatsappUrl} target="_blank" rel="noopener noreferrer" className={enlace}>
             WhatsApp
           </a>
         </div>

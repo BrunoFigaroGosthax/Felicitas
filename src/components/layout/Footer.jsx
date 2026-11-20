@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
-import { CONTACTO, SEDES } from '../../data/contenido.js';
+import useTextos from '../../hooks/useTextos.js';
 
 export default function Footer() {
+  const { contacto, sedes } = useTextos();
   return (
     <footer id="contacto" className="bg-menta text-on-brand">
       <div className="container-page grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4">
@@ -17,7 +18,7 @@ export default function Footer() {
         </div>
         <div className="flex flex-col gap-3">
           <h2 className="font-body text-base font-bold">Dónde atiendo</h2>
-          {SEDES.map((s) => (
+          {sedes.map((s) => (
             <div key={s.id}>
               <p className="font-semibold">{s.nombre}</p>
               <a className="underline" href={s.mapa} target="_blank" rel="noopener noreferrer">{s.direccion}</a>
@@ -29,10 +30,10 @@ export default function Footer() {
         </div>
         <div className="flex flex-col gap-2">
           <h2 className="font-body text-base font-bold">Contacto</h2>
-          <p className="text-sm">{CONTACTO.nombre} · {CONTACTO.matricula}</p>
-          <a className="underline" href={CONTACTO.whatsappUrl}>WhatsApp {CONTACTO.whatsapp}</a>
-          <a className="underline" href={CONTACTO.instagramUrl}>{CONTACTO.instagram}</a>
-          <a className="underline" href={`mailto:${CONTACTO.email}`}>{CONTACTO.email}</a>
+          <p className="text-sm">{contacto.nombre} · {contacto.matricula}</p>
+          <a className="underline" href={contacto.whatsappUrl}>WhatsApp {contacto.whatsapp}</a>
+          <a className="underline" href={contacto.instagramUrl}>{contacto.instagram}</a>
+          <a className="underline" href={`mailto:${contacto.email}`}>{contacto.email}</a>
         </div>
         <div className="flex flex-col gap-2">
           <h2 className="font-body text-base font-bold">Navegar</h2>

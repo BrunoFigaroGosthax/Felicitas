@@ -5,6 +5,7 @@ import { agenda, sistemaPorId } from '../lib/agenda/index.js';
 import { configurado } from '../lib/config.js';
 import { enviarSinFallar } from '../lib/email.js';
 import { errorPublico, handler, noConfigurado } from '../lib/errores.js';
+import { lugarTurnos } from '../lib/ajustes.js';
 import { turnoRecordatorio } from '../lib/plantillas.js';
 import { admin, sinError } from '../lib/supabase.js';
 import { hoyAR, linkCancelar } from './turnos.js';
@@ -58,10 +59,11 @@ router.get(
       'turnos',
     );
     let enviados = 0;
+    const lugar = await lugarTurnos();
     for (const t of turnos) {
       await enviarSinFallar({
         para: t.email,
-        ...turnoRecordatorio({ responsable: t.responsable_nombre, fecha: t.fecha, hora: t.hora.slice(0, 5), linkCancelar: linkCancelar(t.id) }),
+        ...turnoRecordatorio({ responsable: t.responsable_nombre, fecha: t.fecha, hora: t.hora.slice(0, 5), linkCancelar: linkCancelar(t.id), lugar }),
       });
       sinError(await admin.from('turnos').update({ recordatorio_enviado_at: new Date().toISOString() }).eq('id', t.id), 'turnos');
       enviados++;

@@ -7,7 +7,8 @@ import Icono from '../components/ui/Icono.jsx';
 import Casilla from '../components/ui/Casilla.jsx';
 import useTitulo from '../hooks/useTitulo.js';
 import Aviso from '../components/ui/Aviso.jsx';
-import { AGENDA_WEB, CONTACTO, MOTIVOS, SEDES } from '../data/contenido.js';
+import { AGENDA_WEB, MOTIVOS } from '../data/contenido.js';
+import useTextos from '../hooks/useTextos.js';
 import { TERMINOS_VERSION } from '../data/legal.js';
 import { listarObrasSociales } from '../services/contenido.js';
 import { Link } from 'react-router-dom';
@@ -56,6 +57,8 @@ function validar(paso, d) {
 }
 
 export default function Turnos() {
+  const { contacto, sedes } = useTextos();
+  const [ciev, ospepri] = sedes;
   useTitulo('Pedí tu turno');
   const [paso, setPaso] = useState(1);
   const [datos, setDatos] = useState(vacio);
@@ -143,7 +146,7 @@ export default function Turnos() {
       <div className="flex max-w-2xl flex-col gap-2.5">
         <h1 className="text-[clamp(34px,4.4vw,52px)] leading-[1.05]">Pedí tu turno</h1>
         <p className="text-[17px] text-ink-muted">
-          Turnos en {SEDES[0].nombre} ({SEDES[0].direccion}), {SEDES[0].horarios[0].toLowerCase()}. Son cuatro pasos y los horarios
+          Turnos en {ciev.nombre} ({ciev.direccion}), {ciev.horarios.join(' y ').toLowerCase()}. Son cuatro pasos y los horarios
           están actualizados con la agenda del consultorio.
         </p>
       </div>
@@ -195,10 +198,10 @@ export default function Turnos() {
               </div>
               {datos.obraSocial === 'OSPEPRI' && (
                 <Aviso>
-                  Con OSPEPRI también podés atenderte en los Consultorios OSPEPRI ({SEDES[1].direccion}), de lunes a viernes. Esos turnos se
+                  Con OSPEPRI también podés atenderte en {ospepri.nombre} ({ospepri.direccion}): {ospepri.horarios.join(', ').toLowerCase()}. Esos turnos se
                   piden en la{' '}
-                  <a href={SEDES[1].turnos.url} target="_blank" rel="noopener noreferrer" className="font-bold underline">app Mi Sindicato</a>.
-                  Acá se reservan los turnos de CIEV (martes de 17 a 21 h).
+                  <a href={ospepri.turnos.url} target="_blank" rel="noopener noreferrer" className="font-bold underline">app Mi Sindicato</a>.
+                  Acá se reservan los turnos de {ciev.nombre} ({ciev.horarios.join(' y ').toLowerCase()}).
                 </Aviso>
               )}
               <Casilla checked={datos.acepta} onChange={set('acepta')} error={errores.acepta}>
@@ -268,7 +271,7 @@ export default function Turnos() {
                     <div role="alert" className="flex flex-wrap items-center gap-3 rounded-bloque bg-danger/10 p-4">
                       <p className="font-medium text-danger">
                         No pudimos cargar los horarios. Probá de nuevo o escribinos por{' '}
-                        <a href={CONTACTO.whatsappUrl} className="underline">WhatsApp</a>.
+                        <a href={contacto.whatsappUrl} className="underline">WhatsApp</a>.
                       </p>
                       <Button variante="secundario" size="sm" onClick={() => setReintento((n) => n + 1)}>
                         Reintentar
@@ -343,11 +346,11 @@ export default function Turnos() {
           <h2 className="text-2xl">Tu turno</h2>
           <dl className="flex flex-col gap-3">
             {[
-              ['Profesional', CONTACTO.nombre],
+              ['Profesional', contacto.nombre],
               ['Motivo', motivo ? motivo.label : 'Sin elegir'],
               ['Día', diaLargo],
               ['Horario', datos.hora || 'Sin elegir'],
-              ['Lugar', `${SEDES[0].nombre} · ${SEDES[0].direccion}`],
+              ['Lugar', `${ciev.nombre} · ${ciev.direccion}`],
             ].map(([dt, dd]) => (
               <div key={dt}>
                 <dt className="text-[13px] font-semibold text-ink-muted">{dt}</dt>

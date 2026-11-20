@@ -22,6 +22,18 @@ export const IMAGENES_SITIO = [
   },
 ];
 
+// Textos del inicio que se pueden cambiar desde Panel → Textos (estos son los originales).
+// `sobreMi`: párrafos separados por una línea en blanco; el primero se muestra más grande.
+export const TEXTOS_INICIO = {
+  titulo: 'Acompaño la salud de tu hijo en cada etapa',
+  bajada:
+    'Soy Felicitas Pino Meneses, médica pediatra en Neuquén. Atiendo desde los primeros días hasta la adolescencia, con tiempo para escucharte y explicarte cada paso.',
+  sobreMiTitulo: 'Te invito a conocerme',
+  sobreMi:
+    'Soy Felicitas Pino Meneses, médica especialista en Pediatría. Brindo una atención cercana, personalizada y basada en la evidencia científica, acompañando a cada familia desde los primeros días de vida hasta la adolescencia.\n\n' +
+    'Además de la consulta, preparo cursos y guías para acompañarte entre visita y visita, con información clara para el día a día con tus hijos.',
+};
+
 // Texto del aviso de mantenimiento cuando no se carga uno propio (tabla `ajustes`, columna `mensaje`).
 export const MENSAJE_MANTENIMIENTO = 'Volvemos en un rato con los turnos y los cursos al día. ¡Gracias por la paciencia!';
 
@@ -37,7 +49,7 @@ export const CONTACTO = {
   googleUrl: 'https://www.google.com/maps/search/?api=1&query=Dra.+Pino+Meneses+Felicitas+Neuqu%C3%A9n',
 };
 
-const mapa = (direccion) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccion)}`;
+export const mapa = (direccion) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${direccion}, Argentina`)}`;
 
 /**
  * Dónde atiende. Las agendas no comparten días: la web reserva solo en CIEV (DrApp);
@@ -51,7 +63,7 @@ export const SEDES = [
     horarios: ['Martes de 17 a 21 h'],
     pacientes: 'Obras sociales del listado y particulares.',
     turnos: { texto: 'Pedir turno online', ruta: '/turnos' },
-    mapa: mapa('Entre Ríos 1152, Neuquén, Argentina'),
+    mapa: mapa('Entre Ríos 1152, Neuquén'),
   },
   {
     id: 'ospepri',
@@ -60,7 +72,7 @@ export const SEDES = [
     horarios: ['Lunes y jueves de 8 a 14 h', 'Miércoles y viernes de 14 a 18:30 h'],
     pacientes: 'Solo pacientes de OSPEPRI.',
     turnos: { texto: 'Turnos en la app Mi Sindicato', url: 'https://appsindicatopetroleros.org/#/home' },
-    mapa: mapa('Mendoza 125, Neuquén, Argentina'),
+    mapa: mapa('Mendoza 125, Neuquén'),
   },
 ];
 

@@ -4,6 +4,7 @@ import { config, configurado } from '../lib/config.js';
 import { enviarSinFallar } from '../lib/email.js';
 import { errorPublico, handler, noConfigurado } from '../lib/errores.js';
 import { limite } from '../lib/limite.js';
+import { lugarTurnos } from '../lib/ajustes.js';
 import { turnoCancelado, turnoConfirmado } from '../lib/plantillas.js';
 import { admin, sinError } from '../lib/supabase.js';
 import { leerTokenTurno, tokenTurno } from '../lib/tokens.js';
@@ -91,7 +92,7 @@ router.post(
 
     await enviarSinFallar({
       para: datos.email,
-      ...turnoConfirmado({ ...datos, linkCancelar: registroId ? linkCancelar(registroId) : null }),
+      ...turnoConfirmado({ ...datos, linkCancelar: registroId ? linkCancelar(registroId) : null, lugar: await lugarTurnos() }),
     });
     res.status(201).json({ id: turno.id, fecha: turno.fecha, hora: turno.hora });
   }),

@@ -1,9 +1,9 @@
 // npm run test:e2e  → prueba el sitio local (http://localhost:5173 + backend en :3001; levantarlos antes).
 // E2E_URL=https://felicitas-sable.vercel.app npm run test:e2e  → prueba el sitio publicado.
-// Solo una: npm run test:e2e -- panel   (publico, contenido, turnos, video, compra, panel, mantenimiento, imagenes)
+// Solo una: npm run test:e2e -- panel   (publico, contenido, turnos, video, compra, panel, mantenimiento, imagenes, textos)
 import { WEB } from './comun.mjs';
 
-const TODAS = ['publico', 'contenido', 'turnos', 'video', 'compra', 'panel', 'mantenimiento', 'imagenes'];
+const TODAS = ['publico', 'contenido', 'turnos', 'video', 'compra', 'panel', 'mantenimiento', 'imagenes', 'textos'];
 const elegidas = process.argv.slice(2).length ? process.argv.slice(2) : TODAS;
 
 console.log(`Probando ${WEB}`);
