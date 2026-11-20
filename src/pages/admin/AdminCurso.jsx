@@ -161,7 +161,7 @@ function Portada({ curso, onCambio }) {
               </BotonTexto>
             )}
           </div>
-          <p className="text-sm text-ink-muted">JPG, PNG o WebP, hasta 2 MB. Ideal: 1200 × 630. Sin imagen se usan las ondas del color elegido.</p>
+          <p className="text-sm text-ink-muted">JPG, PNG o WebP. Se achica y se guarda en WebP. Ideal: horizontal, 1200 × 630. Sin imagen se usan las ondas del color elegido.</p>
         </div>
       </div>
       {error && <Aviso tono="error">{error}</Aviso>}

@@ -4,8 +4,9 @@ import { buttonClasses, ButtonLink } from '../components/ui/Button.jsx';
 import Encabezado from '../components/ui/Encabezado.jsx';
 import Icono from '../components/ui/Icono.jsx';
 import CourseCard from '../components/cursos/CourseCard.jsx';
+import useAjustes from '../hooks/useAjustes.js';
 import useTitulo from '../hooks/useTitulo.js';
-import { CONTACTO, SEDES, SERVICIOS } from '../data/contenido.js';
+import { CONTACTO, IMAGENES_SITIO, SEDES, SERVICIOS } from '../data/contenido.js';
 import ResenasGoogle from '../components/inicio/ResenasGoogle.jsx';
 import { listarObrasSociales, listarResenas, listarTestimonios } from '../services/contenido.js';
 import { listarCursos } from '../services/cursos.js';
@@ -16,6 +17,9 @@ export default function Inicio() {
   const [testimonios, setTestimonios] = useState([]);
   const [obrasSociales, setObrasSociales] = useState([]);
   const [resenas, setResenas] = useState(null);
+  // Fotos cambiables desde el panel; sin personalizar, las originales de /img.
+  const ajustes = useAjustes();
+  const imagenes = Object.fromEntries(IMAGENES_SITIO.map((i) => [i.clave, ajustes?.[i.campo] || i.original]));
 
   useEffect(() => {
     listarResenas().then(setResenas);
@@ -54,8 +58,8 @@ export default function Inicio() {
           </div>
           <div className="flex min-w-0 flex-[1_1_300px] justify-center">
             <img
-              src="/img/felicitas-retrato.jpg"
-              alt="Retrato de la Dra. Felicitas Pino Meneses, sonriendo, con ambo blanco"
+              src={imagenes.retrato}
+              alt="Retrato de la Dra. Felicitas Pino Meneses"
               width="1080"
               height="1080"
               fetchpriority="high"
@@ -67,10 +71,10 @@ export default function Inicio() {
 
       {/* Sobre mí */}
       <section id="sobre" className="container-page flex scroll-mt-28 flex-wrap items-center gap-10 py-16 lg:gap-16 lg:py-24">
-        {/* Foto provisoria de baja resolución (236×295): reemplazar por una de al menos 840×1050. */}
+        {/* La original es provisoria y de baja resolución: se reemplaza desde Panel → Imágenes. */}
         <img
-          src="/img/consultorio.jpg"
-          alt="Consultorio pediátrico con escritorio y sillas blancas"
+          src={imagenes.consultorio}
+          alt="Consultorio de la Dra. Felicitas Pino Meneses"
           width="236"
           height="295"
           loading="lazy"

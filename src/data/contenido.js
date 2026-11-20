@@ -1,4 +1,27 @@
 // Datos de contacto y textos fijos.
+// Imágenes del sitio que la administradora puede cambiar (Panel → Imágenes). `campo`: columna de `ajustes`;
+// vacía = se usa `original`. Al subir, se achican a `maxLado` px y se convierten a WebP.
+export const IMAGENES_SITIO = [
+  {
+    clave: 'retrato',
+    campo: 'imagen_retrato',
+    titulo: 'Foto de la portada',
+    donde: 'Inicio, arriba de todo. Se ve recortada en círculo: conviene una foto con la cara en el centro.',
+    original: '/img/felicitas-retrato.webp',
+    maxLado: 1200,
+    forma: 'aspect-square rounded-full',
+  },
+  {
+    clave: 'consultorio',
+    campo: 'imagen_consultorio',
+    titulo: 'Foto de "Sobre mí"',
+    donde: 'Inicio, sección "Sobre mí". Se ve vertical: conviene una foto parada (más alta que ancha).',
+    original: '/img/consultorio.webp',
+    maxLado: 1600,
+    forma: 'aspect-[4/5] rounded-card',
+  },
+];
+
 // Texto del aviso de mantenimiento cuando no se carga uno propio (tabla `ajustes`, columna `mensaje`).
 export const MENSAJE_MANTENIMIENTO = 'Volvemos en un rato con los turnos y los cursos al día. ¡Gracias por la paciencia!';
 

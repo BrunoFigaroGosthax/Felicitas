@@ -29,6 +29,7 @@ const AdminCupones = lazy(() => import('./pages/admin/AdminCupones.jsx'));
 const AdminTurnos = lazy(() => import('./pages/admin/AdminTurnos.jsx'));
 const AdminArrepentimientos = lazy(() => import('./pages/admin/AdminArrepentimientos.jsx'));
 const AdminContenido = lazy(() => import('./pages/admin/AdminContenido.jsx'));
+const AdminImagenes = lazy(() => import('./pages/admin/AdminImagenes.jsx'));
 const AdminCuenta = lazy(() => import('./pages/admin/AdminCuenta.jsx'));
 
 export default function App() {
@@ -62,6 +63,7 @@ export default function App() {
           <Route path="turnos" element={<AdminTurnos />} />
           <Route path="arrepentimientos" element={<AdminArrepentimientos />} />
           <Route path="contenido" element={<AdminContenido />} />
+          <Route path="imagenes" element={<AdminImagenes />} />
           <Route path="cuenta" element={<AdminCuenta />} />
         </Route>
         <Route path="*" element={<NoEncontrada />} />

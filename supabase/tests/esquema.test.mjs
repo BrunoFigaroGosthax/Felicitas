@@ -281,6 +281,12 @@ await espera('ajustes: no se agrega otra fila', () => db.query('insert into ajus
 await espera('anon NO cambia ajustes', () => como('anon', null, 'update ajustes set mantenimiento = true returning id'), (r, e) => !!e || r.rows.length === 0);
 await espera('alumno NO cambia ajustes', () => como('authenticated', E, 'update ajustes set mantenimiento = true returning id'), (r, e) => !!e || r.rows.length === 0);
 await espera('admin pone el sitio en mantenimiento', () => como('authenticated', ADM, 'update ajustes set mantenimiento = true returning mantenimiento'), (r) => r?.rows[0]?.mantenimiento === true);
+// ---------------- Migración 8: imágenes del sitio ----------------
+await espera('bucket sitio público, solo WebP y JPEG', () => db.query(`select * from storage.buckets where id = 'sitio'`), (r) => r.rows[0]?.public === true && r.rows[0].allowed_mime_types.join() === 'image/webp,image/jpeg');
+await espera('admin sube imagen del sitio', () => como('authenticated', ADM, `insert into storage.objects (bucket_id, name) values ('sitio', 'retrato.webp')`), (r, e) => !e);
+await espera('alumno NO sube imagen del sitio', () => como('authenticated', E, `insert into storage.objects (bucket_id, name) values ('sitio', 'x.webp')`), (r, e) => !!e);
+await espera('admin cambia la imagen del retrato', () => como('authenticated', ADM, `update ajustes set imagen_retrato = 'https://x/retrato.webp' returning imagen_retrato`), (r) => r?.rows[0]?.imagen_retrato === 'https://x/retrato.webp');
+await espera('alumno NO cambia imágenes', () => como('authenticated', E, `update ajustes set imagen_consultorio = 'x' returning id`), (r, e) => !!e || r.rows.length === 0);
 
 console.log(fallas ? `\n${fallas} FALLAS` : '\nTodo OK');
 process.exit(fallas ? 1 : 0);

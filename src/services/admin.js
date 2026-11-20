@@ -3,6 +3,8 @@
 import { supabase } from '../lib/supabase.js';
 import { api } from './api.js';
 import { ajustesCambiados } from './contenido.js';
+import { IMAGENES_SITIO } from '../data/contenido.js';
+import { aWebp, extension } from '../lib/imagen.js';
 
 const BUCKET = 'materiales';
 const MAX_PDF = 50 * 1024 * 1024;
@@ -62,6 +64,40 @@ export async function guardarAjustes({ mantenimiento, mensaje }) {
   );
   ajustesCambiados(fila);
   return fila;
+}
+
+// ---------------- Imágenes del sitio (bucket público "sitio") ----------------
+
+const MAX_ORIGINAL = 25 * 1024 * 1024; // lo que se acepta antes de achicar (fotos de celular)
+
+export const leerImagenesSitio = () =>
+  q(db().from('ajustes').select(IMAGENES_SITIO.map((i) => i.campo).join(', ')).single(), 'No pudimos leer las imágenes del sitio.');
+
+async function borrarArchivoSitio(url) {
+  const ruta = url?.split('/object/public/sitio/')[1];
+  if (ruta) await db().storage.from('sitio').remove([decodeURIComponent(ruta)]);
+}
+
+/** Achica y convierte a WebP la imagen, la sube y la deja en uso. Devuelve { url, bytes }. */
+export async function subirImagenSitio(imagen, archivo, anterior) {
+  if (!archivo.type.startsWith('image/')) throw new Error('El archivo tiene que ser una imagen.');
+  if (archivo.size > MAX_ORIGINAL) throw new Error('La imagen pesa más de 25 MB. Probá con otra.');
+  const blob = await aWebp(archivo, imagen.maxLado);
+  const ruta = `${imagen.clave}-${Date.now()}.${extension(blob)}`;
+  const { error } = await db().storage.from('sitio').upload(ruta, blob, { contentType: blob.type });
+  if (error) throw new Error(`No pudimos subir la imagen: ${error.message}`);
+  const url = db().storage.from('sitio').getPublicUrl(ruta).data.publicUrl;
+  await q(db().from('ajustes').update({ [imagen.campo]: url }).eq('id', true), 'No pudimos guardar la imagen.');
+  await borrarArchivoSitio(anterior);
+  ajustesCambiados({ [imagen.campo]: url });
+  return { url, bytes: blob.size };
+}
+
+/** Vuelve a la imagen original del sitio. */
+export async function restaurarImagenSitio(imagen, anterior) {
+  await q(db().from('ajustes').update({ [imagen.campo]: null }).eq('id', true), 'No pudimos volver a la imagen original.');
+  await borrarArchivoSitio(anterior);
+  ajustesCambiados({ [imagen.campo]: null });
 }
 
 // ---------------- Cursos ----------------
@@ -127,11 +163,12 @@ async function borrarArchivoPortada(url) {
   if (ruta) await db().storage.from('portadas').remove([decodeURIComponent(ruta)]);
 }
 
-export async function subirPortada(curso, archivo) {
-  const ext = TIPOS_IMAGEN[archivo.type];
-  if (!ext) throw new Error('La imagen tiene que ser JPG, PNG o WebP.');
-  if (archivo.size > MAX_PORTADA) throw new Error('La imagen pesa más de 2 MB. Achicala antes de subirla (con 1200 px de ancho alcanza).');
-  const ruta = `${curso.id}-${Date.now()}.${ext}`;
+export async function subirPortada(curso, original) {
+  if (!TIPOS_IMAGEN[original.type]) throw new Error('La imagen tiene que ser JPG, PNG o WebP.');
+  if (original.size > MAX_ORIGINAL) throw new Error('La imagen pesa más de 25 MB. Probá con otra.');
+  const archivo = await aWebp(original, 1200); // las tarjetas miden ~400 px: con 1200 sobra
+  if (archivo.size > MAX_PORTADA) throw new Error('La imagen sigue pesando más de 2 MB después de achicarla. Probá con otra.');
+  const ruta = `${curso.id}-${Date.now()}.${extension(archivo)}`;
   const { error } = await db().storage.from('portadas').upload(ruta, archivo, { contentType: archivo.type });
   if (error) throw new Error(`No pudimos subir la imagen: ${error.message}`);
   const url = db().storage.from('portadas').getPublicUrl(ruta).data.publicUrl;

@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useSesion } from '../../context/Sesion.jsx';
+import useAjustes from '../../hooks/useAjustes.js';
 import EnMantenimiento from '../../pages/EnMantenimiento.jsx';
-import { escucharAjustes, obtenerAjustes } from '../../services/contenido.js';
 import Header from './Header.jsx';
 import Footer from './Footer.jsx';
 
@@ -11,12 +11,8 @@ const SIEMPRE_ABIERTAS = ['/ingresar', '/crear-cuenta', '/recuperar', '/nueva-cl
 
 /** Qué va en <main>: la página, el aviso de mantenimiento, o nada mientras se decide (evita mostrar y sacar). */
 function useContenido(pathname) {
-  const [ajustes, setAjustes] = useState(null);
+  const ajustes = useAjustes();
   const { esAdmin, cargando } = useSesion();
-  useEffect(() => {
-    obtenerAjustes().then(setAjustes);
-    return escucharAjustes(setAjustes);
-  }, []);
 
   const abierta = pathname.startsWith('/admin') || SIEMPRE_ABIERTAS.includes(pathname.replace(/\/$/, ''));
   const enMantenimiento = Boolean(ajustes?.mantenimiento);

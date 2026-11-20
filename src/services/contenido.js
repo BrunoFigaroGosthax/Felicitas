@@ -3,32 +3,39 @@ import { OBRAS_SOCIALES, TESTIMONIOS } from '../data/contenido.js';
 import { supabase } from '../lib/supabase.js';
 import { api, esperar, USE_MOCKS } from './api.js';
 
-const ABIERTO = { mantenimiento: false, mensaje: null };
+const ABIERTO = { mantenimiento: false, mensaje: null, imagen_retrato: null, imagen_consultorio: null };
 let ajustes = null;
+let ultimos = null; // los ajustes ya recibidos, para leerlos sin esperar (ver ajustesYa)
 
 /**
- * Ajustes del sitio (tabla `ajustes`): { mantenimiento, mensaje }. Se piden una vez por visita.
- * Si la base no responde en 3 s o falla, el sitio queda abierto.
+ * Ajustes del sitio (tabla `ajustes`): { mantenimiento, mensaje, imagen_retrato, imagen_consultorio }.
+ * Se piden una vez por visita. Si la base no responde en 3 s o falla, el sitio queda abierto.
  */
 export function obtenerAjustes() {
   if (!supabase) return Promise.resolve(ABIERTO);
   ajustes ??= Promise.race([
     supabase
       .from('ajustes')
-      .select('mantenimiento, mensaje')
+      .select('*') // '*': una columna nueva sin migrar no rompe la consulta
       .maybeSingle()
-      .then(({ data, error }) => (error || !data ? ABIERTO : data)),
+      .then(({ data, error }) => (error || !data ? ABIERTO : { ...ABIERTO, ...data })),
     new Promise((listo) => setTimeout(() => listo(ABIERTO), 3000)),
-  ]).catch(() => ABIERTO);
+  ])
+    .catch(() => ABIERTO)
+    .then((a) => (ultimos = a));
   return ajustes;
 }
 
+/** Los ajustes si ya llegaron (null si no): evita mostrar la imagen original y después cambiarla. */
+export const ajustesYa = () => ultimos;
+
 const oyentes = new Set();
 
-/** Avisa a esta pestaña que los ajustes cambiaron desde el panel (la franja de aviso se actualiza sin recargar). */
+/** Avisa a esta pestaña que los ajustes cambiaron desde el panel (la franja de aviso y las imágenes se actualizan sin recargar). */
 export function ajustesCambiados(nuevos) {
-  ajustes = Promise.resolve(nuevos);
-  oyentes.forEach((oyente) => oyente(nuevos));
+  ultimos = { ...ABIERTO, ...ultimos, ...nuevos };
+  ajustes = Promise.resolve(ultimos);
+  oyentes.forEach((oyente) => oyente(ultimos));
 }
 
 /** Devuelve la función para dejar de escuchar. */

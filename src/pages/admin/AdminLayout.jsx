@@ -14,6 +14,7 @@ const SECCIONES = [
   { to: 'turnos', label: 'Turnos' },
   { to: 'arrepentimientos', label: 'Arrepentimientos' },
   { to: 'contenido', label: 'Contenido' },
+  { to: 'imagenes', label: 'Imágenes' },
   { to: 'cuenta', label: 'Mis datos' },
 ];
 
